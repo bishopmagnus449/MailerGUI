@@ -13,9 +13,22 @@
     "buefy": "npm:@ntohq/buefy-next@^0.1.4",
     "nodemailer": "^6.9.14",
     "nuxt": "^3.13.0",
+    "nuxt-tiptap-editor": "^1.2.1",
     "pinia": "^2.2.2",
     "vue": "latest"
+  },
+  "devDependencies": {
+    "@formkit/auto-animate": "^0.8.2",
     "@nuxtjs/color-mode": "^3.1.4",
     "@pinia/nuxt": "^0.5.4",
+    "@tiptap/extension-character-count": "^2.5.8",
+    "@tiptap/extension-code-block-lowlight": "^2.5.8",
+    "@tiptap/extension-highlight": "^2.5.8",
+    "@tiptap/extension-image": "^2.5.8",
+    "@tiptap/extension-placeholder": "^2.5.8",
+    "@tiptap/extension-text-align": "^2.5.8",
+    "@tiptap/extension-underline": "^2.5.8",
+    "@tiptap/vue-3": "^2.5.8",
+    "highlight.js": "^11.10.0",
   }
 }

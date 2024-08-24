@@ -11,6 +11,10 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/color-mode',
     '@pinia/nuxt',
+    'nuxt-tiptap-editor',
   ],
+  tiptap: {
+    prefix: 'Tiptap',
+  },
   devtools: { enabled: true }
 })
