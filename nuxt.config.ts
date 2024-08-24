@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     '@pinia/nuxt',
     'nuxt-tiptap-editor',
+    '@formkit/auto-animate/nuxt'
   ],
   tiptap: {
     prefix: 'Tiptap',
