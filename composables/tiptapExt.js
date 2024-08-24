@@ -1,0 +1,10 @@
+export { Image as TiptapImage } from "@tiptap/extension-image";
+export { Underline as TiptapUnderline } from "@tiptap/extension-underline";
+export { TextAlign as TiptapTextAlign } from "@tiptap/extension-text-align";
+export { Placeholder as TiptapPlaceholder } from "@tiptap/extension-placeholder";
+export { CharacterCount as TiptapCharacterCount } from "@tiptap/extension-character-count";
+export { Highlight as TiptapHighlight } from "@tiptap/extension-highlight";
+export { CodeBlockLowlight as TiptapCodeBlockLowlight} from "@tiptap/extension-code-block-lowlight";
+export { NodeViewContent as TiptapNodeViewContent} from "@tiptap/vue-3";
+export { NodeViewWrapper as TiptapNodeViewWrapper} from "@tiptap/vue-3";
+export { VueNodeViewRenderer as TiptapVueNodeViewRenderer} from "@tiptap/vue-3";
