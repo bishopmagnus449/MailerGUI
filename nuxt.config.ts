@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     }
   },
   modules: [
+    '@nuxtjs/color-mode',
     '@pinia/nuxt',
   ],
   devtools: { enabled: true }
