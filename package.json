@@ -10,11 +10,11 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@pinia/nuxt": "^0.5.4",
     "buefy": "npm:@ntohq/buefy-next@^0.1.4",
     "nodemailer": "^6.9.14",
     "nuxt": "^3.13.0",
     "pinia": "^2.2.2",
     "vue": "latest"
+    "@pinia/nuxt": "^0.5.4",
   }
 }
