@@ -8,6 +8,9 @@
                    :clickable="true"
                    tabindex="0"
                    :type="smtpStore.isReady() ? 'is-success' : 'is-primary'"
+                   @dragenter="isDraggingConfigSelect = true"
+                   @drop="isDraggingConfigSelect = false"
+                   @dragleave="(event: DragEvent) => handleDragLeave(event, 'ConfigSelect', 'isDraggingConfigSelect')"
                    :class="{'is-active': activeStep == 0}">
         <h1 class="title has-text-centered">SMTP Configuration</h1>
 
@@ -17,7 +20,7 @@
               <b-button @click="newSMTPConfig" icon-left="card-plus" type="is-info" title="New Config"/>
             </b-field>
             <b-field class="file is-primary">
-              <b-upload class="file-label">
+              <b-upload @change="handleSMTPSelect" class="file-label">
                 <span class="file-cta p-2" title="Import from file">
                     <b-icon icon="link-plus"></b-icon>
                 </span>
@@ -26,24 +29,18 @@
           </b-field>
         </div>
 
-        <b-field>
-          <b-upload v-model="receiversFile"
-                    @change="handleFileUpload"
-                    drag-drop expanded :type="receiversFile ? 'is-success' : 'is-primary'" rounded>
+        <b-field ref="ConfigSelect" v-if="isDraggingConfigSelect" >
+          <b-upload @change="handleSMTPSelect" @update:modelValue="handleSMTPSelect"
+                    drag-drop expanded rounded>
             <section class="section">
               <div class="content has-text-centered">
                 <p>
                   <b-icon
-                      :icon="receiversFile ? 'attachment-check' : 'upload'"
+                      icon="upload"
                       size="is-large">
                   </b-icon>
                 </p>
-                <p v-if="receiversFile">
-                  Selected file: {{ receiversFile.name }}
-                  <b-icon title="Remove selected file" @click.prevent="receiversFile = null" icon="close"></b-icon>
-                </p>
-                <p v-else>Drop your files here or click to upload</p>
-                <p v-if="receiversFile">Receivers count: {{ receiversCount }}</p>
+                <p>Drop your SMTP config file here</p>
               </div>
             </section>
           </b-upload>
@@ -200,6 +197,8 @@ export default {
 
   data() {
     return {
+      isDraggingConfigSelect: false,
+
       smtpStore: useSMTPStore(),
       activeStep: 0,
       receiversFile: null as File | null,
@@ -229,6 +228,19 @@ export default {
   },
   methods: {
     log: (a: any) => console.log(a),
+
+    handleDragLeave(event: DragEvent, el: string, draggingVariable: string) {
+      if (!this.$refs[el]) return
+
+      const rect = this.$refs[el].$el.getBoundingClientRect();
+      const x = event.clientX;
+      const y = event.clientY;
+      const isWithin = (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+
+      if (!isWithin) {
+        this[draggingVariable] = false
+      }
+    },
 
     formatSubstringText(text: string): string {
       return text.substring(0, 100) + (text.length > 100 ? '...' : '');
@@ -269,6 +281,53 @@ export default {
         this.receiversCount = (e.target?.result as string).split('\n').length;
       };
       reader.readAsText(file);
+    },
+
+    handleSMTPSelect(event: any) {
+      const processSMTPString = (smtp_line: string) => {
+        let smtp_info = smtp_line.trim().split('|')
+        if (smtp_info.length < 3) {
+          return false;
+        }
+        let require_login = smtp_info.length > 4;
+        return {
+          'host': smtp_info[0],
+          'port': smtp_info[1],
+          'user': require_login ? smtp_info[2] : null,
+          'pass': require_login ? smtp_info[3] : null,
+
+          'from': smtp_info.at(-1),
+        }
+      }
+
+      const file = event instanceof File ? event : event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        (e.target?.result as string).split('\n').forEach(smtp_line => {
+          const smtp_config = processSMTPString(smtp_line);
+          if (smtp_config) {
+            this.SMTPConfigs.push(processSMTPString(smtp_line));
+          }
+        })
+      };
+
+      if (this.SMTPConfigs.length) {
+        this.$buefy.dialog.confirm({
+          message: 'Overwrite current SMTP configuration(s)?',
+          confirmText: 'Overwrite',
+          cancelText: 'Append',
+          onConfirm: () => {
+            this.SMTPConfigs.splice(0, this.SMTPConfigs.length);
+            reader.readAsText(file);
+          },
+          onCancel: () => {
+            reader.readAsText(file);
+          },
+          type: 'is-danger',
+        });
+      } else {
+        reader.readAsText(file);
+      }
     },
 
     newSMTPConfig() {
