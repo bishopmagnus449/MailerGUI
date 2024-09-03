@@ -11,7 +11,7 @@
                    :class="{'is-active': activeStep == 0}">
         <h1 class="title has-text-centered">SMTP Configuration</h1>
 
-        <div class="mb-3">
+        <div class="mb-4">
           <b-field grouped group-multiline>
             <b-field>
               <b-button @click="newSMTPConfig" icon-left="card-plus" type="is-info" title="New Config"/>
@@ -118,7 +118,7 @@
       <b-step-item icon="email-edit" label="Message" :clickable="true" tabindex="2">
         <h1 class="title has-text-centered">Message(s)</h1>
 
-        <div class="mb-3">
+        <div class="mb-4">
           <b-field grouped group-multiline>
             <b-field>
               <b-button @click="newMessage" icon-left="email-plus" type="is-info" title="New Message"></b-button>
