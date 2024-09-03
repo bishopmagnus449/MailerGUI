@@ -404,7 +404,7 @@ export default {
     isNextDisabled() {
       let condition: boolean = false;
       if (this.activeStep == 0) {
-        condition = !(this.smtpStore.isReady())
+        condition = this.SMTPConfigs.length === 0
       } else if (this.activeStep == 1) {
         condition = this.receiversFile == null
       }
