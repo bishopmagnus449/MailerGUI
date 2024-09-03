@@ -204,7 +204,7 @@ export default {
       receiversFile: null as File | null,
       receiversCount: null as number | null,
       messages: [] as object[],
-      SMTPConfigs: [] as object[],
+      SMTPConfigs: [] as {host: string, port: number, user: string | null, pass: string | null, from: string | undefined}[],
       messagesColumns: [
         {
           field: "subject",
@@ -293,7 +293,7 @@ export default {
         let require_login = smtp_info.length > 4;
         return {
           'host': smtp_info[0],
-          'port': smtp_info[1],
+          'port': Number(smtp_info[1]),
           'user': require_login ? smtp_info[2] : null,
           'pass': require_login ? smtp_info[3] : null,
 
@@ -307,7 +307,7 @@ export default {
         (e.target?.result as string).split('\n').forEach(smtp_line => {
           const smtp_config = processSMTPString(smtp_line);
           if (smtp_config) {
-            this.SMTPConfigs.push(processSMTPString(smtp_line));
+            this.SMTPConfigs.push(smtp_config);
           }
         })
       };
