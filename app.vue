@@ -49,8 +49,8 @@
         <b-field>
           <b-table
               :data="SMTPConfigs"
-              striped
-              draggable
+              striped height="500"
+              sticky-header
               @dragstart="tableDragstart"
               @drop="(payload: any) => tableDrop(payload, SMTPConfigs)"
               @dragover="tableDragover"
