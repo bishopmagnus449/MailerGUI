@@ -238,6 +238,7 @@ export default {
       const isWithin = (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
 
       if (!isWithin) {
+        // @ts-ignore
         this[draggingVariable] = false
       }
     },
