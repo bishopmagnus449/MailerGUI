@@ -451,11 +451,11 @@ html, body {
   flex: 1 1;
 }
 
+/*noinspection All*/
 body div#__nuxt {
   display: flex;
   flex-grow: 1;
   justify-content: center;
-  /*noinspection CssUnresolvedCustomProperty*/
   background-image: var(--background-image);
   background-attachment: fixed;
   background-size: cover;
