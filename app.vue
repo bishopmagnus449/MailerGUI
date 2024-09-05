@@ -89,7 +89,7 @@
 
         <b-field>
           <b-upload v-model="receiversFile"
-                    @change="handleFileUpload"
+                    @update:modelValue="handleFileUpload"
                     drag-drop expanded :type="receiversFile ? 'is-success' : 'is-primary'" rounded>
             <section class="section">
               <div class="content has-text-centered">
@@ -276,7 +276,7 @@ export default {
     },
 
     handleFileUpload(event: any) {
-      const file = event.target.files[0];
+      const file = event instanceof File ? event : event.target.files[0];
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
         this.receiversCount = (e.target?.result as string).split('\n').length;
