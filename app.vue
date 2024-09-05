@@ -303,13 +303,16 @@ export default {
 
       const file = event instanceof File ? event : event.target.files[0];
       const reader = new FileReader();
+      let counter = 0;
       reader.onload = (e: ProgressEvent<FileReader>) => {
         (e.target?.result as string).split('\n').forEach(smtp_line => {
           const smtp_config = processSMTPString(smtp_line);
           if (smtp_config) {
             this.SMTPConfigs.push(smtp_config);
+            counter++;
           }
         })
+        this.$buefy.snackbar.open({message: `${counter} config(s) loaded`});
       };
 
       if (this.SMTPConfigs.length) {
