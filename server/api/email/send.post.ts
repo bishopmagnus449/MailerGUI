@@ -9,7 +9,6 @@ export default defineEventHandler(async (event) => {
         receivers: body.receivers,
         message: body.message,
     });
-    console.log("test")
 
     return { jobId: job.id };
 })
