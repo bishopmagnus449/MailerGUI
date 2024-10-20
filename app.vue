@@ -3,15 +3,71 @@
   <div class="container is-flex-grow-1 m-3 p-3 is-flex">
     <b-steps ref="stepsContainer" v-model="activeStep" mobile-mode="compact"
              class="is-flex is-flex-direction-column is-flex-grow-1 is-relative">
+      <b-step-item label="Config"
+                   tabindex="1"
+                   icon="cog"
+                   type="is-primary"
+                   :clickable="true"
+                   :class="{'is-active': activeStep == 0}">
+        <h1 class="title has-text-centered">Mailer Configuration</h1>
+
+        <b-field label="Sender Configuration">
+          <b-field expanded label="Concurrent Workers" label-position="on-border">
+            <b-input type="number" v-model="globalConfig.workers" min="1" required />
+          </b-field>
+        </b-field>
+
+        <b-field label="Short Configuration" expanded>
+          <b-field expanded label="Short URL" label-position="on-border" grouped>
+            <b-input expanded type="url" v-model="globalConfig.short" required />
+            <b-switch left-label v-model="globalConfig.useShortener" >Use Shortener</b-switch>
+          </b-field>
+
+        </b-field>
+
+        <b-field>
+          <b-collapse animation="slide" v-model="globalConfig.useShortener">
+            <b-field expanded label="Shortener API Key" message="URL Shortener: https://www.silverlining.cloud/products/url-shortener" label-position="on-border">
+              <b-input expanded v-model="globalConfig.shortenerAPIKey" :required="globalConfig.useShortener" />
+            </b-field>
+          </b-collapse>
+        </b-field>
+
+
+        <b-field label="Qrcode Generation">
+          <b-field expanded label="Insert Mode" label-position="on-border">
+            <b-select expanded v-model="globalConfig.inlineQrcode">
+              <option :value="true">Inline</option>
+              <option :value="false">Base64</option>
+            </b-select>
+          </b-field>
+        </b-field>
+
+        <b-field expanded label="Unicode Qrcode" grouped>
+          <b-field expanded label="Font Size" label-position="on-border">
+            <b-input expanded type="string" v-model="globalConfig.unicodeQrcode.fontSize" />
+          </b-field>
+
+          <b-field expanded label="Foreground Color" label-position="on-border">
+            <b-input type="text" expanded v-model="globalConfig.unicodeQrcode.foregroundColor" ></b-input>
+          </b-field>
+
+          <b-field expanded label="Background Color" label-position="on-border">
+            <b-input type="text" expanded v-model="globalConfig.unicodeQrcode.backgroundColor" ></b-input>
+          </b-field>
+
+        </b-field>
+
+
+      </b-step-item>
       <b-step-item icon="at"
                    label="SMTP"
                    :clickable="true"
-                   tabindex="0"
-                   :type="smtpStore.isReady() ? 'is-success' : 'is-primary'"
+                   tabindex="1"
+                   :type="SMTPConfigs.length > 0 ? 'is-success' : 'is-primary'"
                    @dragenter="isDraggingConfigSelect = true"
                    @drop="isDraggingConfigSelect = false"
-                   @dragleave="(event: DragEvent) => handleDragLeave(event, 'ConfigSelect', 'isDraggingConfigSelect')"
-                   :class="{'is-active': activeStep == 0}">
+                   @dragleave="(event: DragEvent) => handleDragLeave(event, 'ConfigSelect', 'isDraggingConfigSelect')">
         <h1 class="title has-text-centered">SMTP Configuration</h1>
 
         <div class="mb-4">
@@ -29,7 +85,7 @@
           </b-field>
         </div>
 
-        <b-field ref="ConfigSelect" v-if="isDraggingConfigSelect" >
+        <b-field ref="ConfigSelect" v-if="isDraggingConfigSelect">
           <b-upload @change="handleSMTPSelect" @update:modelValue="handleSMTPSelect"
                     drag-drop expanded rounded>
             <section class="section">
@@ -83,36 +139,13 @@
         </b-field>
       </b-step-item>
 
-      <b-step-item icon="account-multiple" label="Receivers" :type="!isNextDisabled ? 'is-success' : 'is-primary'"
-                   :clickable="!isNextDisabled" tabindex="1">
-        <h1 class="title has-text-centered">Choose Receivers</h1>
+      <b-step-item
+          icon="email-edit"
+          label="Message"
+          :clickable="SMTPConfigs.length > 0"
+          :type="messages.length > 0 ? 'is-success' : 'is-primary'"
 
-        <b-field>
-          <b-upload v-model="receiversFile"
-                    @update:modelValue="handleFileUpload"
-                    drag-drop expanded :type="receiversFile ? 'is-success' : 'is-primary'" rounded>
-            <section class="section">
-              <div class="content has-text-centered">
-                <p>
-                  <b-icon
-                      :icon="receiversFile ? 'attachment-check' : 'upload'"
-                      size="is-large">
-                  </b-icon>
-                </p>
-                <p v-if="receiversFile">
-                  Selected file: {{ receiversFile.name }}
-                  <b-icon title="Remove selected file" @click.prevent="receiversFile = null" icon="close"></b-icon>
-                </p>
-                <p v-else>Drop your files here or click to upload</p>
-                <p v-if="receiversFile">Receivers count: {{ receiversCount }}</p>
-              </div>
-            </section>
-          </b-upload>
-        </b-field>
-
-      </b-step-item>
-
-      <b-step-item icon="email-edit" label="Message" :clickable="true" tabindex="2">
+          tabindex="2">
         <h1 class="title has-text-centered">Message(s)</h1>
 
         <div class="mb-4">
@@ -152,7 +185,7 @@
             {{ props.row.attachments.length }}
           </b-table-column>
 
-          <b-table-column field="options" label="Options" v-slot="props">
+          <b-table-column field="subject" label="Options" v-slot="props">
 
             <b-field>
               <b-button class="mr-1" @click="editMessage(props.row)" icon-left="pencil"></b-button>
@@ -172,16 +205,57 @@
         </b-table>
       </b-step-item>
 
+      <b-step-item icon="account-multiple" label="Receivers" :type="receiversFile ? 'is-success' : 'is-primary'"
+                   :clickable="!isNextDisabled" tabindex="3">
+        <h1 class="title has-text-centered">Choose Receivers</h1>
+
+        <b-field>
+          <b-upload v-model="receiversFile"
+                    @update:modelValue="handleFileUpload"
+                    drag-drop expanded :type="receiversFile ? 'is-success' : 'is-primary'" rounded>
+            <section class="section">
+              <div class="content has-text-centered">
+                <p>
+                  <b-icon
+                      :icon="receiversList.length ? 'attachment-check' : 'upload'"
+                      size="is-large">
+                  </b-icon>
+                </p>
+                <p v-if="receiversList.length">
+                  <b-icon title="Empty list" @click.prevent="receiversList.splice(0, receiversList.length)" icon="close"></b-icon>
+                </p>
+                <p v-else>Drop your files here or click to upload</p>
+                <p v-if="receiversList.length">Receivers count: {{ receiversList.length }}</p>
+              </div>
+            </section>
+          </b-upload>
+        </b-field>
+
+      </b-step-item>
+
+      <b-step-item class="is-flex-grow-1" :class="{'is-flex': activeStep==4}" icon="progress-clock" label="Progress" :clickable="true" tabindex="4">
+        <WebsocketLogger />
+      </b-step-item>
+
       <template #navigation="{previous, next}">
-        <div class="steps-navigations m-4">
-          <b-button @click.prevent="previous.action" icon-left="chevron-left" v-show="!previous.disabled">Previous
+        <div class="steps-navigations m-4" v-if="activeStep !== 4">
+          <b-button @click.prevent="previous.action" icon-left="chevron-left" v-show="!previous.disabled">
+            Previous
           </b-button>
-          <b-button @click.prevent="next.action" icon-right="chevron-right" v-show="!next.disabled"
-                    :disabled="isNextDisabled">Next
-          </b-button>
+          <b-button v-if="activeStep !== 3"
+                    @click.prevent="next.action"
+                    icon-right="chevron-right"
+                    v-show="!(next.disabled && activeStep !== 2)"
+                    :disabled="isNextDisabled">Next</b-button>
+
+          <b-button v-else :type="{'is-success': !isNextDisabled}" :disabled="isNextDisabled" @click="startProcess(next)">Start Mailing!</b-button>
+        </div>
+        <div v-else class="steps-navigations m-4">
+          <b-button @click.prevent="manageQueue('pause')">Pause</b-button>
+          <b-button @click.prevent="manageQueue('resume')">Resume</b-button>
+          <b-button @click.prevent="manageQueue('stop')">Stop</b-button>
         </div>
       </template>
-
     </b-steps>
 
   </div>
@@ -192,8 +266,11 @@ import {useSMTPStore} from "~/src/stores/smtpStore";
 import MessageEditorModal from "~/src/components/MessageEditorModal.vue";
 import {getRandomMember} from "~/utils/arrays";
 import SMTPConfigEditorModal from "~/src/components/SMTPConfigEditorModal.vue";
+import {type MailerConfig, type SMTPConfig, type Message} from "~/src/types/types";
+import WebsocketLogger from "./src/components/WebsocketLogger.vue";
 
 export default {
+  components: {WebsocketLogger},
 
   data() {
     return {
@@ -202,9 +279,48 @@ export default {
       smtpStore: useSMTPStore(),
       activeStep: 0,
       receiversFile: null as File | null,
-      receiversCount: null as number | null,
-      messages: [] as object[],
-      SMTPConfigs: [] as {host: string, port: number, user: string | null, pass: string | null, from: string | undefined}[],
+      receiversList: [
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+        'saamaanhdg@outlook.com',
+      ] as string[],
+      messages: [] as Message[],
+      SMTPConfigs: [{
+        host: "smtp.sendgrid.net",
+        port: 587,
+        user: "apikey",
+        pass: "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",
+        from: "ankit.kushwaha@techstalwarts.com",
+        proxy: 'http://localhost:10808'
+      }] as SMTPConfig[],
       messagesColumns: [
         {
           field: "subject",
@@ -219,6 +335,18 @@ export default {
           label: "Attachments",
         },
       ],
+      globalConfig: {
+        short: '',
+        workers: 10,
+        useShortener: false,
+        shortenerAPIKey: '',
+        inlineQrcode: true,
+        unicodeQrcode: {
+          fontSize: '3.75px',
+          foregroundColor: 'black',
+          backgroundColor: 'transparent',
+        },
+      } as MailerConfig,
       tableDraggingRow: null as string | null,
       tableDraggingRowIndex: null as number | null,
       tableCheckable: false,
@@ -228,6 +356,30 @@ export default {
   },
   methods: {
     log: (a: any) => console.log(a),
+
+    async startProcess(next: any) {
+      next.action()
+      const res = await fetch('/api/email/send', {
+        method: 'post',
+        body: JSON.stringify({
+          smtp_list: this.SMTPConfigs,
+          receivers: this.receiversList,
+          messages: this.messages,
+          config: this.globalConfig,
+        }),
+        headers: {'content-type': 'application/json'},
+      });
+      console.log(await res.json())
+    },
+
+    async manageQueue(method: string) {
+      const res = await fetch('/api/email/manage', {
+        method: 'post',
+        body: JSON.stringify({method}),
+        headers: {'content-type': 'application/json'},
+      });
+      console.log(await res.json());
+    },
 
     handleDragLeave(event: DragEvent, el: string, draggingVariable: string) {
       if (!this.$refs[el]) return
@@ -276,12 +428,46 @@ export default {
     },
 
     handleFileUpload(event: any) {
+      const validateEmail = (email: string) => {
+        return String(email)
+            .toLowerCase()
+            .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+      };
+
       const file = event instanceof File ? event : event.target.files[0];
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
-        this.receiversCount = (e.target?.result as string).split('\n').length;
+        let receivers = (e.target?.result as string).split('\n');
+        let counter = 0;
+        for (let receiver of receivers) {
+          if (validateEmail(receiver)) {
+            this.receiversList.push(receiver);
+            counter++;
+          }
+        }
+        this.$buefy.snackbar.open({message: `${counter} receiver(s) added!`});
+        this.receiversFile = null;
       };
-      reader.readAsText(file);
+
+      if (this.receiversList.length) {
+        this.$buefy.dialog.confirm({
+          message: 'Overwrite current receiver(s)?',
+          confirmText: 'Overwrite',
+          cancelText: 'Append',
+          onConfirm: () => {
+            this.receiversList.splice(0, this.receiversList.length);
+            reader.readAsText(file);
+          },
+          onCancel: () => {
+            reader.readAsText(file);
+          },
+          type: 'is-danger',
+        });
+      } else {
+        reader.readAsText(file);
+      }
     },
 
     handleSMTPSelect(event: any) {
@@ -353,7 +539,7 @@ export default {
         props: {configs: this.SMTPConfigs, config, isEdited: true},
       })
     },
-    deleteSMTPConfig(config: Object) {
+    deleteSMTPConfig(config: any) {
       this.$buefy?.dialog.confirm({
         message: 'Are you sure to delete the SMTP config from the list?',
         onConfirm: () => {
@@ -366,7 +552,7 @@ export default {
     },
 
     newMessage() {
-      const message = {subject: "", body: "", attachments: [], options: ""};
+      const message = {subject: "", body: "", attachments: [], options: "", messageType: "html"};
       this.$buefy.modal.open({
         parent: this,
         component: MessageEditorModal,
@@ -384,7 +570,7 @@ export default {
         props: {messages: this.messages, message, isEdited: true},
       })
     },
-    deleteMessage(message: object) {
+    deleteMessage(message: Message) {
       this.$buefy.dialog.confirm({
         message: 'Are you sure to delete the message from the list?',
         onConfirm: () => {
@@ -407,9 +593,13 @@ export default {
     isNextDisabled() {
       let condition: boolean = false;
       if (this.activeStep == 0) {
-        condition = this.SMTPConfigs.length === 0
+        condition = !this.globalConfig.short;
       } else if (this.activeStep == 1) {
-        condition = this.receiversFile == null
+        condition = this.SMTPConfigs.length === 0
+      } else if (this.activeStep == 2) {
+        condition = this.messages.length === 0
+      } else if (this.activeStep == 3) {
+        condition = this.receiversList.length == 0
       }
       return condition;
     },
@@ -438,6 +628,7 @@ export default {
         }
       ]
     });
+
     this.loadBackgroundImage()
   },
 
@@ -474,6 +665,8 @@ body div#__nuxt {
   background-color: rgb(255 255 255 / 80%);
 }
 
+
+
 .steps-navigations {
   position: absolute;
   bottom: 0;
@@ -482,9 +675,18 @@ body div#__nuxt {
 
 .step-content {
   overflow: hidden;
-}
+  flex: 1 auto;
 
-.step-content {
+  .step-item {
+    contain: content;
+
+    .logger {
+      contain: size;
+      overflow: hidden;
+      overflow-y: auto;
+    }
+  }
+
   &:not(.is-transitioning) {
     .is-active {
       display: initial !important;
@@ -492,6 +694,9 @@ body div#__nuxt {
   }
 }
 
+.user-select-none {
+  user-select: none !important;
+}
 
 @media screen and (min-width: 768px) {
   .container {

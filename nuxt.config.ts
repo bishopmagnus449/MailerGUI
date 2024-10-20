@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// @ts-ignore
 export default defineNuxtConfig({
   ssr: false,
   compatibilityDate: '2024-04-03',
@@ -13,10 +14,15 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     '@pinia/nuxt',
     'nuxt-tiptap-editor',
-    '@formkit/auto-animate/nuxt'
+    '@formkit/auto-animate/nuxt',
   ],
   tiptap: {
     prefix: 'Tiptap',
   },
-  devtools: { enabled: true }
+  devtools: { enabled: true },
+  nitro: {
+    experimental: {
+      websocket: true,
+    }
+  },
 })

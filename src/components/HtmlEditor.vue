@@ -5,6 +5,8 @@ import ts from 'highlight.js/lib/languages/typescript'
 import html from 'highlight.js/lib/languages/xml'
 import {createLowlight} from 'lowlight'
 import CodeBlockComponent from '~/src/components/CodeBlockComponent.vue'
+import AttachImage from '~/src/components/AttachImageModal.vue'
+import {type Editor} from '@tiptap/core'
 
 const lowlight = createLowlight()
 lowlight.register({html})
@@ -14,6 +16,7 @@ lowlight.register({ts})
 
 export default {
   name: "HtmlEditor",
+  components: {AttachImage},
   props: {
     modelValue: {type: String, default: ""}
   },
@@ -26,19 +29,9 @@ export default {
     return {
       isHtml: isHtml,
 
-      isDraggingImageSelect: false,
       isDraggingHtmlSelect: false,
 
       addImageModal: false,
-      newImage: {} as {
-        cid: string,
-        file: File,
-        isInline: boolean,
-        url: string,
-        filename: string,
-        width: number,
-        filetype: string
-      },
 
       editor: useEditor({
         content: isHtml ? `<pre><code class="language-html">${encodeDecodeHTML(this.modelValue)}</code></pre>` : this.modelValue,
@@ -60,9 +53,9 @@ export default {
           }),
           TiptapImage.configure({
             allowBase64: true,
-          }),
+          })
         ],
-        onUpdate: ({editor}) => {
+        onUpdate: ({editor}: {editor: Editor}) => {
           let content = editor.getHTML();
           let matches = content.match(/^<pre><code class="language-html">(.*)<\/code><\/pre>$/s)
           if (matches) {
@@ -78,29 +71,40 @@ export default {
   },
 
   computed: {
-    imagePreviewUrl() {
-      let blob = URL.createObjectURL(this.newImage.file);
-      let image = new Image();
-      image.onload = () => {
-        this.newImage.width = image.width;
-        this.newImage.filename = this.newImage.file.name;
-        this.newImage.filetype = this.newImage.file.type;
-      };
-      image.src = blob;
-
-      return blob;
-    },
   },
 
   methods: {
     log(event: any) {
       console.log(event)
     },
-    handleDragLeave(event: DragEvent, draggingVariable: string) {
-      // @ts-ignore
-      if (event.target === event.currentTarget || !event.target.contains(event.currentTarget)) {
+    imagePreviewUrl(file: File) {
+      console.log(file)
+      return URL.createObjectURL(file);
+    },
+    attachImage(file: {file: File, width: number, filename: string, filetype: string}) {
+      const url = this.imagePreviewUrl(file.file);
+      const img = `<img src="${url}" style="width:${file.width}" alt="">`
+      this.editor.chain().insertContent(img).run()
+    },
+    openImagePicker(){
+      this.$buefy.modal.open({
+        component: AttachImage,
+        events: {newImage: this.attachImage},
+        hasModalCard: true,
+        trapFocus: true,
+      })
+    },
+    handleDragLeave(event: DragEvent, el: string, draggingVariable: string) {
+      if (!this.$refs[el]) return
+
+      const rect = this.$refs[el].$el.getBoundingClientRect();
+      const x = event.clientX;
+      const y = event.clientY;
+      const isWithin = (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+
+      if (!isWithin) {
         // @ts-ignore
-        this[draggingVariable] = false;
+        this[draggingVariable] = false
       }
     },
     handleHtmlFileDrop(file: File) {
@@ -131,16 +135,6 @@ export default {
 
       this.isHtml = !this.isHtml;
     },
-    attachImage() {
-      this.$emit('attachedImage', this.newImage)
-      this.$buefy.toast.open('Image Attached')
-      return true
-    },
-    resetImage() {
-      // @ts-ignore
-      this.newImage = {};
-      return true
-    }
   },
 }
 </script>
@@ -194,7 +188,7 @@ export default {
 
       <b-field>
         <b-button icon-left="image-plus" title="Add Image"
-                  @click="addImageModal = true"></b-button>
+                  @click="openImagePicker"></b-button>
       </b-field>
 
       <i class="vertical"></i>
@@ -285,8 +279,8 @@ export default {
 
     <b-field grouped @dragenter="isDraggingHtmlSelect = true"
              @drop="isDraggingHtmlSelect = false"
-             @dragleave="(event: DragEvent) => handleDragLeave(event, 'isDraggingHtmlSelect')">
-      <b-field v-if="isDraggingHtmlSelect" expanded>
+             @dragleave="(event: DragEvent) => handleDragLeave(event, 'uploadContainer', 'isDraggingHtmlSelect')">
+      <b-field ref="uploadContainer" v-if="isDraggingHtmlSelect" expanded>
         <b-upload accept="text/plain, text/html, text/htm" @update:modelValue="handleHtmlFileDrop"
                   expanded
                   drag-drop>
@@ -308,107 +302,6 @@ export default {
       </b-field>
     </b-field>
 
-
-    <b-modal v-model="addImageModal"
-             has-modal-card
-             destroy-on-hide
-             aria-role="dialog"
-             aria-label="Example Modal"
-             close-button-aria-label="Cancel"
-             aria-modal>
-      <template #default="props">
-        <form action="">
-          <div class="modal-card">
-            <header class="modal-card-head">
-              <p class="modal-card-title">Attach Image</p>
-              <button
-                  type="button"
-                  class="delete"
-                  @click="props.close"/>
-            </header>
-            <section class="modal-card-body" @dragenter="isDraggingImageSelect = true"
-                     @drop="isDraggingImageSelect = false"
-                     @dragleave="(event: DragEvent) => handleDragLeave(event, 'isDraggingImageSelect')">
-              <b-field v-if="isDraggingImageSelect">
-                <b-upload accept="image/*" v-model="newImage.file"
-                          expanded
-                          drag-drop>
-                  <section class="section">
-                    <div class="content has-text-centered">
-                      <p>
-                        <b-icon
-                            icon="upload"
-                            size="is-large">
-                        </b-icon>
-                      </p>
-                      <p>Drop your files here</p>
-                    </div>
-                  </section>
-                </b-upload>
-              </b-field>
-              <b-field v-else class="file is-primary" :class="{'has-name': !!newImage.file}">
-                <b-upload v-model="newImage.file" class="file-label" accept="image/*">
-                  <span class="file-cta">
-                      <b-icon class="file-icon" icon="upload"></b-icon>
-                      <span class="file-label">Choose Image</span>
-                  </span>
-                  <span class="file-name" v-if="newImage.file">
-                      {{ newImage.file.name }}
-                            <button type="button" class="delete" @click.prevent="resetImage"></button>
-                  </span>
-                </b-upload>
-              </b-field>
-
-              <b-field v-if="newImage.file" label="Attach Type">
-                <b-radio-button v-model="newImage.isInline"
-                                :native-value="false"
-                                type="is-primary is-light is-outlined">
-                  <b-icon icon="code-json"></b-icon>
-                  <span>Base64</span>
-                </b-radio-button>
-
-                <b-radio-button v-model="newImage.isInline"
-                                :native-value="true"
-                                type="is-primary is-light is-outlined">
-                  <b-icon icon="image-frame"></b-icon>
-                  <span>Inline</span>
-                </b-radio-button>
-              </b-field>
-
-              <b-field grouped v-if="newImage.file">
-                <b-field style="width: 80px" label="Width" label-position="on-border">
-                  <b-input type="number" v-model="newImage.width"/>
-                </b-field>
-
-                <b-field style="width: 160px" label="Mime Type" label-position="on-border">
-                  <b-input v-model="newImage.filetype"/>
-                </b-field>
-
-
-                <b-field v-if="newImage.isInline" label="Attachment Name" label-position="on-border" expanded>
-                  <b-input v-model="newImage.filename"/>
-                </b-field>
-              </b-field>
-
-              <b-field v-if="newImage.file" label="Preview">
-                <img :alt="newImage.filename" :src="imagePreviewUrl" :width="newImage.width"></img>
-              </b-field>
-
-
-            </section>
-            <footer class="modal-card-foot">
-              <b-button
-                  label="Cancel"
-                  @click="resetImage() && props.close()"/>
-              <b-button
-                  label="Add"
-                  type="is-primary"
-                  @click="attachImage() && props.close()"/>
-            </footer>
-          </div>
-        </form>
-      </template>
-    </b-modal>
   </div>
 
 </template>

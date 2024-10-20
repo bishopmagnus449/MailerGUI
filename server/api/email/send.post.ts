@@ -1,14 +1,24 @@
-import mailQueue from '~/server/queues/mailQueue';
-
+import {MailQueue} from '~/server/queues/mailQueue';
+import {MailerConfig} from "~/src/types/types";
+import {WebSocketLogger} from "~/utils/WebSocketLogger";
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
+    const smtp = body.smtp_list[0];
+    const receivers: any[] = body.receivers;
+    const config: MailerConfig = body.config;
+    const queue = await MailQueue.setup(config);
+    const logger = WebSocketLogger.getInstance();
+    await queue.queue.drain();
 
-    const job = await mailQueue.add({
-        smtp: body.smtp,
-        receivers: body.receivers,
-        message: body.message,
-    });
+    logger.sendLog({type: 'reset'})
+    receivers.map(async receiver => await queue.queue.add('', {
+        smtp,
+        receiver,
+        count: receivers.length,
+        messages: body.messages,
+        config,
+    }))
 
-    return { jobId: job.id };
+    return { status: 'ok' };
 })
