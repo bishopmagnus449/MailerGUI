@@ -262,7 +262,6 @@
 </template>
 
 <script lang="ts">
-import {useSMTPStore} from "~/src/stores/smtpStore";
 import MessageEditorModal from "~/src/components/MessageEditorModal.vue";
 import {getRandomMember} from "~/utils/arrays";
 import SMTPConfigEditorModal from "~/src/components/SMTPConfigEditorModal.vue";
@@ -276,51 +275,11 @@ export default {
     return {
       isDraggingConfigSelect: false,
 
-      smtpStore: useSMTPStore(),
       activeStep: 0,
       receiversFile: null as File | null,
-      receiversList: [
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-        'saamaanhdg@outlook.com',
-      ] as string[],
+      receiversList: [] as string[],
       messages: [] as Message[],
-      SMTPConfigs: [{
-        host: "smtp.sendgrid.net",
-        port: 587,
-        user: "apikey",
-        pass: "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",
-        from: "ankit.kushwaha@techstalwarts.com",
-        proxy: 'http://localhost:10808'
-      }] as SMTPConfig[],
+      SMTPConfigs: [] as SMTPConfig[],
       messagesColumns: [
         {
           field: "subject",
