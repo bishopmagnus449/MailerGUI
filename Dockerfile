@@ -29,6 +29,7 @@ COPY . .
 RUN npm run build
 
 FROM node:20-alpine as mailer-gui
+RUN apk add --no-cache cairo
 WORKDIR /app
 COPY --from=deployment /app/.output ./
 EXPOSE 3000
