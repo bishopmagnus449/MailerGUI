@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   tiptap: {
     prefix: 'Tiptap',
   },
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV !== 'production' },
   nitro: {
     experimental: {
       websocket: true,
