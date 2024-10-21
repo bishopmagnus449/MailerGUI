@@ -10,8 +10,7 @@ RUN apk add --no-cache \
     pango-dev \
     giflib-dev \
     libjpeg-turbo-dev \
-    freetype-dev \
-    cairo
+    freetype-dev
 
 # Set working directory
 WORKDIR /app
@@ -28,7 +27,7 @@ COPY . .
 # Build the application
 RUN npm run build
 
-FROM node:20-alpine as mailer-gui
+FROM node:20-alpine AS mailer-gui
 RUN apk add --no-cache cairo
 WORKDIR /app
 COPY --from=deployment /app/.output ./
