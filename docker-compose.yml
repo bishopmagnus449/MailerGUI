@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  app:
+  mailer-gui:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,18 +7,12 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - NUST_HOST=0.0.0.0
+      - NUXT_PORT=3000
     depends_on:
       - redis
-    volumes:
-      - .:/app
-    command: npm run preview
 
   redis:
     image: "redis:7.0"
     ports:
       - "6379:6379"
-    volumes:
-      - redis-data:/data
-
-volumes:
-  redis-data:

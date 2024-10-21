@@ -27,7 +27,7 @@ COPY . .
 # Build the application
 RUN npm run build
 
-FROM node:20-alpine as MailerGUI
+FROM node:20-alpine as mailer-gui
 WORKDIR /app
 COPY --from=deployment /app/.output ./
 EXPOSE 3000
