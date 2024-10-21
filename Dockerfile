@@ -1,5 +1,16 @@
 # Use an official Node.js runtime as a base image
-FROM node:20.1-alpine
+FROM node:23-alpine
+
+# Install necessary build dependencies for canvas
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    cairo-dev \
+    pango-dev \
+    giflib-dev \
+    libjpeg-turbo-dev \
+    freetype-dev
 
 # Set working directory
 WORKDIR /app
