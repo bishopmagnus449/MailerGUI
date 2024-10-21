@@ -1,5 +1,5 @@
 # Use an official Node.js runtime as a base image
-FROM node:23-alpine
+FROM node:20-alpine AS deployment
 
 # Install necessary build dependencies for canvas
 RUN apk add --no-cache \
@@ -16,19 +16,21 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package.json and package-lock.json files
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Copy the reset of application
 COPY . .
 
 # Build the application
 RUN npm run build
 
-# Expose the port Nuxt will run on
+FROM node:20-alpine as MailerGUI
+WORKDIR /app
+COPY --from=deployment /app/.output ./
 EXPOSE 3000
-
-# Start the Nuxt app
-CMD ["npm", "run", "preview"]
+ENV NUST_HOST=0.0.0.0
+ENV NUXT_PORT=3000
+CMD ["node", "server/index.mjs"]
