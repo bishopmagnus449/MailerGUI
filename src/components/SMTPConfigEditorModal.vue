@@ -1,5 +1,6 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
+import {type SMTPConfig} from "~/src/types/types";
 
 export default defineComponent({
   name: "SMTPConfigEditorModal",
@@ -11,14 +12,19 @@ export default defineComponent({
 
   data() {
     return {
-      currentConfig: {...this.config} as {host: string, port: number, user: string, pass: string, from: string}
+      currentConfig: {...this.config} as SMTPConfig
     }
   },
 
   methods: {
     saveConfig() {
-      if (!this.$refs.form.checkValidity()) {
-        this.$refs.form.reportValidity()
+      // @ts-ignore
+      const form: HTMLFormElement = this.$refs.form;
+      if (!form) {
+        return false;
+      }
+      if (!form.checkValidity()) {
+        form.reportValidity()
         return false
       }
       if (this.isEdited) {
@@ -56,11 +62,11 @@ export default defineComponent({
         </b-field>
 
         <b-field label="Username" label-position="on-border">
-          <b-input icon="account" v-model="currentConfig.user" required></b-input>
+          <b-input icon="account" v-model="currentConfig.user" ></b-input>
         </b-field>
 
         <b-field label="Password" label-position="on-border">
-          <b-input icon="lock" v-model="currentConfig.pass" type="password" required password-reveal></b-input>
+          <b-input icon="lock" v-model="currentConfig.pass" type="password"  password-reveal></b-input>
         </b-field>
 
         <b-field label="From Address" label-position="on-border">

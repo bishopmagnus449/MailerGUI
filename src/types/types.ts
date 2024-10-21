@@ -59,3 +59,5 @@ export interface WebsocketLog {
     type: WebSocketLogType,
     message?: any,
 }
+
+export type Step = 'config' | 'smtp' | 'message' | 'receivers' | 'progress'

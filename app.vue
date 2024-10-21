@@ -4,67 +4,70 @@
     <b-steps ref="stepsContainer" v-model="activeStep" mobile-mode="compact"
              class="is-flex is-flex-direction-column is-flex-grow-1 is-relative">
       <b-step-item label="Config"
+                   value="config"
                    tabindex="1"
                    icon="cog"
-                   type="is-primary"
                    :clickable="true"
-                   :class="{'is-active': activeStep == 0}">
+                   :type="isConfigDone ? 'is-success' : 'is-primary'"
+                   :class="{'is-active': activeStep == 'config'}">
         <h1 class="title has-text-centered">Mailer Configuration</h1>
-
-        <b-field label="Sender Configuration">
-          <b-field expanded label="Concurrent Workers" label-position="on-border">
-            <b-input type="number" v-model="globalConfig.workers" min="1" required />
-          </b-field>
-        </b-field>
-
-        <b-field label="Short Configuration" expanded>
-          <b-field expanded label="Short URL" label-position="on-border" grouped>
-            <b-input expanded type="url" v-model="globalConfig.short" required />
-            <b-switch left-label v-model="globalConfig.useShortener" >Use Shortener</b-switch>
-          </b-field>
-
-        </b-field>
-
-        <b-field>
-          <b-collapse animation="slide" v-model="globalConfig.useShortener">
-            <b-field expanded label="Shortener API Key" message="URL Shortener: https://www.silverlining.cloud/products/url-shortener" label-position="on-border">
-              <b-input expanded v-model="globalConfig.shortenerAPIKey" :required="globalConfig.useShortener" />
+        <form>
+          <b-field label="Sender Configuration">
+            <b-field expanded label="Concurrent Workers" label-position="on-border">
+              <b-input type="number" v-model="globalConfig.workers" min="1" required />
             </b-field>
-          </b-collapse>
-        </b-field>
-
-
-        <b-field label="Qrcode Generation">
-          <b-field expanded label="Insert Mode" label-position="on-border">
-            <b-select expanded v-model="globalConfig.inlineQrcode">
-              <option :value="true">Inline</option>
-              <option :value="false">Base64</option>
-            </b-select>
-          </b-field>
-        </b-field>
-
-        <b-field expanded label="Unicode Qrcode" grouped>
-          <b-field expanded label="Font Size" label-position="on-border">
-            <b-input expanded type="string" v-model="globalConfig.unicodeQrcode.fontSize" />
           </b-field>
 
-          <b-field expanded label="Foreground Color" label-position="on-border">
-            <b-input type="text" expanded v-model="globalConfig.unicodeQrcode.foregroundColor" ></b-input>
+          <b-field label="Short Configuration" expanded>
+            <b-field expanded label="Short URL" label-position="on-border" grouped>
+              <b-input expanded type="url" v-model="globalConfig.short" required />
+              <b-switch left-label v-model="globalConfig.useShortener" >Use Shortener</b-switch>
+            </b-field>
+
           </b-field>
 
-          <b-field expanded label="Background Color" label-position="on-border">
-            <b-input type="text" expanded v-model="globalConfig.unicodeQrcode.backgroundColor" ></b-input>
+          <b-field>
+            <b-collapse animation="slide" v-model="globalConfig.useShortener">
+              <b-field expanded label="Shortener API Key" message="URL Shortener: https://www.silverlining.cloud/products/url-shortener" label-position="on-border">
+                <b-input expanded v-model="globalConfig.shortenerAPIKey" :required="globalConfig.useShortener" />
+              </b-field>
+            </b-collapse>
           </b-field>
 
-        </b-field>
+
+          <b-field label="Qrcode Generation">
+            <b-field expanded label="Insert Mode" label-position="on-border">
+              <b-select expanded v-model="globalConfig.inlineQrcode">
+                <option :value="true">Inline</option>
+                <option :value="false">Base64</option>
+              </b-select>
+            </b-field>
+          </b-field>
+
+          <b-field expanded label="Unicode Qrcode" grouped>
+            <b-field expanded label="Font Size" label-position="on-border">
+              <b-input expanded type="string" v-model="globalConfig.unicodeQrcode.fontSize" />
+            </b-field>
+
+            <b-field expanded label="Foreground Color" label-position="on-border">
+              <b-input type="text" expanded v-model="globalConfig.unicodeQrcode.foregroundColor" ></b-input>
+            </b-field>
+
+            <b-field expanded label="Background Color" label-position="on-border">
+              <b-input type="text" expanded v-model="globalConfig.unicodeQrcode.backgroundColor" ></b-input>
+            </b-field>
+
+          </b-field>
+        </form>
 
 
       </b-step-item>
       <b-step-item icon="at"
+                   value="smtp"
                    label="SMTP"
-                   :clickable="true"
+                   :clickable="isConfigDone"
                    tabindex="1"
-                   :type="SMTPConfigs.length > 0 ? 'is-success' : 'is-primary'"
+                   :type="isSMTPDone ? 'is-success' : 'is-primary'"
                    @dragenter="isDraggingConfigSelect = true"
                    @drop="isDraggingConfigSelect = false"
                    @dragleave="(event: DragEvent) => handleDragLeave(event, 'ConfigSelect', 'isDraggingConfigSelect')">
@@ -141,9 +144,10 @@
 
       <b-step-item
           icon="email-edit"
+          value="message"
           label="Message"
-          :clickable="SMTPConfigs.length > 0"
-          :type="messages.length > 0 ? 'is-success' : 'is-primary'"
+          :clickable="isSMTPDone"
+          :type="isMessagesDone ? 'is-success' : 'is-primary'"
 
           tabindex="2">
         <h1 class="title has-text-centered">Message(s)</h1>
@@ -206,7 +210,7 @@
       </b-step-item>
 
       <b-step-item icon="account-multiple" label="Receivers" :type="receiversFile ? 'is-success' : 'is-primary'"
-                   :clickable="!isNextDisabled" tabindex="3">
+                   :clickable="isMessagesDone" tabindex="3" value="receivers">
         <h1 class="title has-text-centered">Choose Receivers</h1>
 
         <b-field>
@@ -233,19 +237,19 @@
 
       </b-step-item>
 
-      <b-step-item class="is-flex-grow-1" :class="{'is-flex': activeStep==4}" icon="progress-clock" label="Progress" :clickable="true" tabindex="4">
+      <b-step-item class="is-flex-grow-1" :class="{'is-flex': activeStep=='progress'}" value="progress" icon="progress-clock" label="Progress" :clickable="false" tabindex="4">
         <WebsocketLogger />
       </b-step-item>
 
       <template #navigation="{previous, next}">
-        <div class="steps-navigations m-4" v-if="activeStep !== 4">
+        <div class="steps-navigations m-4" v-if="activeStep !== 'progress'">
           <b-button @click.prevent="previous.action" icon-left="chevron-left" v-show="!previous.disabled">
             Previous
           </b-button>
-          <b-button v-if="activeStep !== 3"
+          <b-button v-if="activeStep !== 'receivers'"
                     @click.prevent="next.action"
                     icon-right="chevron-right"
-                    v-show="!(next.disabled && activeStep !== 2)"
+                    v-show="!(next.disabled && activeStep !== 'message')"
                     :disabled="isNextDisabled">Next</b-button>
 
           <b-button v-else :type="{'is-success': !isNextDisabled}" :disabled="isNextDisabled" @click="startProcess(next)">Start Mailing!</b-button>
@@ -265,7 +269,7 @@
 import MessageEditorModal from "~/src/components/MessageEditorModal.vue";
 import {getRandomMember} from "~/utils/arrays";
 import SMTPConfigEditorModal from "~/src/components/SMTPConfigEditorModal.vue";
-import {type MailerConfig, type SMTPConfig, type Message} from "~/src/types/types";
+import {type MailerConfig, type SMTPConfig, type Message, type Step} from "~/src/types/types";
 import WebsocketLogger from "./src/components/WebsocketLogger.vue";
 
 export default {
@@ -275,7 +279,7 @@ export default {
     return {
       isDraggingConfigSelect: false,
 
-      activeStep: 0,
+      activeStep: 'config' as Step,
       receiversFile: null as File | null,
       receiversList: [] as string[],
       messages: [] as Message[],
@@ -439,8 +443,8 @@ export default {
         return {
           'host': smtp_info[0],
           'port': Number(smtp_info[1]),
-          'user': require_login ? smtp_info[2] : null,
-          'pass': require_login ? smtp_info[3] : null,
+          'user': require_login ? smtp_info[2] : undefined,
+          'pass': require_login ? smtp_info[3] : undefined,
 
           'from': smtp_info.at(-1),
         }
@@ -480,7 +484,7 @@ export default {
     },
 
     newSMTPConfig() {
-      const config = {host: "", port: 587, user: "", pass: "", from: ""};
+      const config = {host: "", port: 587, user: undefined, pass: undefined, from: ""};
       this.$buefy.modal.open({
         parent: this,
         component: SMTPConfigEditorModal,
@@ -540,7 +544,6 @@ export default {
         type: 'is-danger',
       })
     },
-
     loadBackgroundImage() {
       fetch('/api/backgrounds?theme=spring').then(r => r.json()).then(images => {
         const backgroundImage = `url("${getRandomMember(images)}")`;
@@ -551,17 +554,44 @@ export default {
   computed: {
     isNextDisabled() {
       let condition: boolean = false;
-      if (this.activeStep == 0) {
-        condition = !this.globalConfig.short;
-      } else if (this.activeStep == 1) {
+      if (this.activeStep == 'config') {
+        condition = !this.isConfigDone;
+      } else if (this.activeStep == 'smtp') {
         condition = this.SMTPConfigs.length === 0
-      } else if (this.activeStep == 2) {
+      } else if (this.activeStep == 'message') {
         condition = this.messages.length === 0
-      } else if (this.activeStep == 3) {
+      } else if (this.activeStep == 'receivers') {
         condition = this.receiversList.length == 0
       }
       return condition;
     },
+
+    isConfigDone() {
+      let condition: boolean = true;
+      if (!this.globalConfig.short.match(/^https?:\/\/(www\.)?([a-zA-Z0-9\-_]+\.[a-zA-Z]{2,})(\/\S*)?/)) {
+        condition = false;
+      }
+      if (condition) {}
+      return condition;
+    },
+
+    isSMTPDone() {
+      let condition: boolean = true;
+      if (this.SMTPConfigs.length === 0) {
+        condition = false;
+      }
+      return condition;
+    },
+
+    isMessagesDone() {
+      let condition: boolean = true;
+      if (this.messages.length === 0) {
+        condition = false;
+      }
+      return false;
+    }
+
+
   },
   mounted() {
     useSeoMeta({
