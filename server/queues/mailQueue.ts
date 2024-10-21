@@ -70,13 +70,7 @@ export class MailQueue {
 async function processEmail (job: Job)  {
     const {smtp, receiver, messages, config}: {smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig} = job.data;
 
-    await sendEmail(smtp, receiver, messages, config)
-
-    // todo: debugging...
-    const i = Math.floor(Math.random() * (1000 - 3000)) + Math.ceil(1000);
-    await job.updateData({i, ...job.data})
-    await sleep(i)
-    // await sendEmail(smtp, receiver, messages)
+    await sendEmail(smtp, receiver, messages, config);
 }
 
 async function sendEmail (smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig) {
