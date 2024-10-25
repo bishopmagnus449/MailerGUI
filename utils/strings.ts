@@ -29,3 +29,11 @@ export function generateContentId() {
     const randomNum = Math.floor(Math.random() * 1e16);
     return `image-${timestamp}-${randomNum}`;
 }
+
+export function camelToNormal(str: string) {
+    return str.replace(/([A-Z])/g, ' $1').replace(/^./,  s => s.toUpperCase());
+}
+
+export function dashToNormal(str: string) {
+    return str.replace(/-/g, ' ').replace(/^./,  s => s.toUpperCase());
+}

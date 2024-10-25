@@ -4,32 +4,35 @@ import {MessagePreparer} from '~/utils/DataGenerator';
 import {MailerConfig, SMTPConfig, Message} from "~/src/types/types";
 import {WebSocketLogger} from "~/utils/WebSocketLogger";
 import {SMTPTransporterPool} from "~/utils/pools";
-import random from 'random'
+import {SendMailOptions} from 'nodemailer';
 
-const sleep = (i: number) => new Promise (resolve => setTimeout(resolve, i))
 const logger = WebSocketLogger.getInstance();
+
+const progressData = {
+    progress: 0,
+    count: 0
+};
 
 export class MailQueue {
     public queue: Queue;
     public worker: Worker;
     private static instance: MailQueue;
-    public progress: number;
+    private progressData: { count: number; progress: number };
 
     private constructor(private config: MailerConfig) {
-        const connection = new IORedis({host: 'localhost', port: 6379, maxRetriesPerRequest: null});
+        const connection = new IORedis({host: 'localhost', port: 6379, maxRetriesPerRequest: null, reconnectOnError: () => 2});
         this.queue = new Queue('mailQueue', {connection, defaultJobOptions: {removeOnComplete: true}});
         this.worker = new Worker('mailQueue', processEmail, {connection, concurrency: this.config.workers});
-        this.progress = 1;
+        this.progressData = progressData;
+        this.progressData.progress = 1;
 
-        logger.sendLog({type: 'progress', message: this.progress})
+        logger.sendLog({type: 'progress', message: this.progressData.progress})
 
-        this.worker.on('completed', (job) => {
-            logger.sendLog({type: 'success', message: `[${this.progress} / ${job.data.count}] ` + 'Sent: ' + job.data.receiver});
-            logger.sendLog({type: 'progress', message: Math.floor(this.progress / job.data.count * 100)})
+        this.worker.on('completed', async (job) => {
+            logger.sendLog({type: 'progress', message: Math.floor(this.progressData.progress / job.data.count * 100)})
 
-            console.log([this.progress], 'Sent: ' + job.data.receiver);
-            // logger.sendLog({type: 'info', message: {counter: this.progress, count: job.data.count}})
-            this.progress++;
+            this.progressData.count = job.data.count;
+            this.progressData.progress++;
         })
 
         this.worker.on('failed', (job, error) => {
@@ -37,13 +40,12 @@ export class MailQueue {
         })
 
         this.worker.on('paused', () => {
-
             logger.sendLog({type: 'progress', message: undefined});
         })
 
         this.worker.on('resumed', () => {
             logger.sendLog({type: 'info', message: 'Worker resumed...'})
-            logger.sendLog({type: 'progress', message: this.progress});
+            logger.sendLog({type: 'progress', message: this.progressData.progress});
         });
 
         this.worker.on('closed', () => {
@@ -55,7 +57,7 @@ export class MailQueue {
 
     static async setup(config: MailerConfig) {
         const instance = new this(config);
-        instance.progress = 1;
+        instance.progressData.progress = 1;
         this.instance = instance;
         return instance;
 
@@ -67,36 +69,37 @@ export class MailQueue {
 
 }
 
-async function processEmail (job: Job)  {
-    const {smtp, receiver, messages, config}: {smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig} = job.data;
+async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig}>)  {
+    const {smtp, receiver, messages, config} = job.data;
 
-    await sendEmail(smtp, receiver, messages, config);
-}
-
-async function sendEmail (smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig) {
     logger.sendLog({type: 'log', message: 'Sending to: ' + receiver});
-    // const transporterPool = SMTPTransporterPool.getInstance(smtp, config.workers);
-    // const transporter = await transporterPool.acquire();
-    // console.info('Available', transporterPool.pool.available);
-    // console.info('borrowed', transporterPool.pool.borrowed);
+    const transporterPool = SMTPTransporterPool.getInstance(smtp, config.workers);
+    const transporter = await transporterPool.acquire();
 
     try {
         for (let message of messages) {
             const preparer = await MessagePreparer.setup(message, smtp, receiver, config)
-            const email = {
+            const email: SendMailOptions = {
                 from: smtp.from,
                 to: receiver,
                 subject: preparer.subject,
                 text: preparer.text,
                 html: preparer.html,
                 attachments: preparer.attachments,
+                raw: message.bodyRawContent,
             }
-            // console.info(email);
-            // await transporter.sendMail(email)
+            const sentMessage = await transporter.sendMail(email)
+            console.info(typeof sentMessage, sentMessage)
         }
-    } catch (e) {
+        logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
+        console.info([progressData.progress], 'Sent: ' + receiver);
+    } catch (e: any) {
+        logger.sendLog({type: 'danger', message: 'Error: ' + receiver});
+        logger.sendLog({type: 'danger', message: e.message});
+
+        console.error('Error: ' + receiver)
         console.error(e)
     } finally {
-        // await transporterPool.release(transporter);
+        await transporterPool.release(transporter);
     }
 }

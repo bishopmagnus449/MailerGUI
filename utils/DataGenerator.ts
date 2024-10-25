@@ -8,7 +8,7 @@ import {Buffer} from 'buffer';
 import QRCode from 'qrcode';
 import {createCanvas, registerFont} from 'canvas';
 import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
-import {generateContentId} from "./strings";
+import {generateContentId} from "~/utils/strings";
 import * as Mail from "nodemailer/lib/mailer";
 
 export class DataGenerator {
@@ -323,6 +323,8 @@ export class MessagePreparer {
                     body = body.replace(image.imgTag, tag)
                 }
             }
+        } else if (this.message.messageType == 'editor') {
+            body = this.message.bodyHTMLEditor || '';
         }
         else {
             throw new Error('Internal error: Empty body')

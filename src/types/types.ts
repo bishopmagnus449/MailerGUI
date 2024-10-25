@@ -1,3 +1,5 @@
+import {SendMailOptions} from 'nodemailer'
+
 export interface HTMLImage {
     alt: string,
     src: string,
@@ -24,12 +26,15 @@ type MessageType = 'html' | 'raw' | 'editor';
 
 export interface Message {
     subject: string,
-    body?: string,
     attachments: Attachment[],
     messageType: MessageType,
     bodyHTMLFile?: File,
     bodyHTMLContent?: string,
     bodyHTMLImages?: HTMLImage[],
+    bodyHTMLEditor?: string,
+    bodyRawFile?: File,
+    bodyRawContent?: string,
+    headers: SendMailOptions,
 }
 
 export interface SMTPConfig {

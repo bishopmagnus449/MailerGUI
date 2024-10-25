@@ -182,7 +182,7 @@
           </b-table-column>
 
           <b-table-column field="body" label="Body" v-slot="props">
-            {{ extractTextFromHtml(props.row.body) }}
+            {{ extractTextFromHtml(props.row) }}
           </b-table-column>
 
           <b-table-column field="attachments" label="Attachments" numeric v-slot="props">
@@ -209,7 +209,7 @@
         </b-table>
       </b-step-item>
 
-      <b-step-item icon="account-multiple" label="Receivers" :type="receiversFile ? 'is-success' : 'is-primary'"
+      <b-step-item icon="account-multiple" label="Receivers" :type="receiversList.length ? 'is-success' : 'is-primary'"
                    :clickable="isMessagesDone" tabindex="3" value="receivers">
         <h1 class="title has-text-centered">Choose Receivers</h1>
 
@@ -335,6 +335,16 @@ export default {
       console.log(await res.json())
     },
 
+    async checkQueues() {
+      const {data} = await useFetch('/api/email/ping');
+      if (data.value.queueRunning) {
+        if (this.activeStep !== 'progress' && data.value.remainingCount > 0) {
+          this.$buefy.toast.open({message: 'Another sending process is running...'});
+          this.activeStep = 'progress';
+        }
+      }
+    },
+
     async manageQueue(method: string) {
       const res = await fetch('/api/email/manage', {
         method: 'post',
@@ -383,7 +393,22 @@ export default {
       moveItem(list, this.tableDraggingRow, droppedOnRowIndex)
     },
 
-    extractTextFromHtml(payload: string, substring: number = 100, trailing: string = '...') {
+    extractTextFromHtml(payload: string|Message, substring: number = 100, trailing: string = '...') {
+      if (typeof payload !== 'string') {
+        switch (payload.messageType) {
+          case "editor":
+            payload = payload.bodyHTMLEditor || '';
+            break;
+          case "html":
+            payload = payload.bodyHTMLContent || '';
+            break;
+          case "raw":
+            payload = '[RAW MESSAGE]';
+            break;
+          default:
+            payload = '[EMPTY BODY]';
+        }
+      }
       const tempElement = document.createElement('div');
       tempElement.innerHTML = payload;
       const extracted = tempElement.innerText.substring(0, substring);
@@ -394,6 +419,7 @@ export default {
       const validateEmail = (email: string) => {
         return String(email)
             .toLowerCase()
+            .trim()
             .match(
                 /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             );
@@ -410,6 +436,7 @@ export default {
             counter++;
           }
         }
+
         this.$buefy.snackbar.open({message: `${counter} receiver(s) added!`});
         this.receiversFile = null;
       };
@@ -588,12 +615,12 @@ export default {
       if (this.messages.length === 0) {
         condition = false;
       }
-      return false;
+      return condition;
     }
 
 
   },
-  mounted() {
+  async mounted() {
     useSeoMeta({
       title: 'Mailer GUI',
       description: 'Another mass mailer script but with gui!',
@@ -617,6 +644,8 @@ export default {
         }
       ]
     });
+
+    await this.checkQueues();
 
     this.loadBackgroundImage()
   },
@@ -647,6 +676,12 @@ body div#__nuxt {
 </style>
 
 <style lang="scss">
+.is-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+}
+
 .container {
   border-radius: 4px;
   box-shadow: 0 0 35px 0 rgb(0 0 0 / 25%);
