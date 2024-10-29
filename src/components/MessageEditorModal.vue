@@ -1,6 +1,5 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
-import HtmlEditor from "~/src/components/HtmlEditor.vue";
 import AttachImage from '~/src/components/AttachImageModal.vue'
 import HeadersModal from "~/src/components/HeadersModal.vue";
 import {type Attachment, type HTMLImage, type Message} from "../types/types";
@@ -81,7 +80,6 @@ import {
 
 export default defineComponent({
   name: "MessageEditorModal",
-  components: {HtmlEditor},
   props: {
     message: {type: Object, required: true},
     messages: {type: Array<any>, required: true},

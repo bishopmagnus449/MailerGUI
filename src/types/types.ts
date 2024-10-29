@@ -1,14 +1,14 @@
 import {SendMailOptions} from 'nodemailer'
 
 export interface HTMLImage {
-    alt: string,
-    src: string,
-    filename: string | undefined,
-    filetype: string | undefined,
+    alt?: string,
+    src?: string,
+    filename?: string,
+    filetype?: string,
     isInline: boolean,
-    cid: string | undefined,
-    width: number | undefined,
-    content: string | undefined,
+    cid?: string,
+    width?: number,
+    content?: string,
     isProcessed: boolean,
     imgTag: string,
     file: File | undefined,

@@ -77,9 +77,7 @@ export default defineComponent({
       const form: HTMLFormElement = this.$el;
       if (form.checkValidity()) {
         for (const header in this.newHeaders) {
-          console.log(header)
           this.currentHeaders[header] = this.newHeaders[header]
-          console.log(this.currentHeaders)
         }
         this.$emit('close');
       } else {

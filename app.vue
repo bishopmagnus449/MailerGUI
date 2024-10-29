@@ -344,7 +344,7 @@ export default {
 
     async startProcess(next: any) {
       next.action()
-      const res = await fetch('/api/email/send', {
+      await fetch('/api/email/send', {
         method: 'post',
         body: JSON.stringify({
           smtp_list: this.SMTPConfigs,
@@ -354,7 +354,6 @@ export default {
         }),
         headers: {'content-type': 'application/json'},
       });
-      console.log(await res.json())
     },
 
     async checkQueues() {
@@ -368,12 +367,11 @@ export default {
     },
 
     async manageQueue(method: string) {
-      const res = await fetch('/api/email/manage', {
+      await fetch('/api/email/manage', {
         method: 'post',
         body: JSON.stringify({method}),
         headers: {'content-type': 'application/json'},
       });
-      console.log(await res.json());
     },
 
     handleDragLeave(event: DragEvent, el: string, draggingVariable: string) {
@@ -443,7 +441,7 @@ export default {
             .toLowerCase()
             .trim()
             .match(
-                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             );
       };
 

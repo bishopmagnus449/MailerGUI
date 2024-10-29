@@ -5,6 +5,7 @@ import {MailerConfig, SMTPConfig, Message} from "~/src/types/types";
 import {WebSocketLogger} from "~/utils/WebSocketLogger";
 import {SMTPTransporterPool} from "~/utils/pools";
 import {SendMailOptions} from 'nodemailer';
+import {simpleParser} from "mailparser";
 
 const logger = WebSocketLogger.getInstance();
 
@@ -73,23 +74,38 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
     const {smtp, receiver, messages, config} = job.data;
 
     logger.sendLog({type: 'log', message: 'Sending to: ' + receiver});
-    const transporterPool = SMTPTransporterPool.getInstance(smtp, config.workers);
+    const transporterPool = SMTPTransporterPool.getInstance(smtp, config);
     const transporter = await transporterPool.acquire();
 
     try {
         for (let message of messages) {
+            if (message.messageType == 'raw') {
+                const parsedMessage = await simpleParser(message.bodyRawContent)
+                message = {
+                    messageType: 'editor',
+                    headers: parsedMessage.headers,
+                    attachments: parsedMessage.attachments.map(attachment => ({
+                        filename: attachment.filename,
+                        filetype: attachment.type,
+                        content: attachment.content,
+                        size: attachment.size,
+                    })),
+                    bodyHTMLEditor: parsedMessage.html,
+                    subject: message.subject || parsedMessage.subject,
+                }
+            }
+
             const preparer = await MessagePreparer.setup(message, smtp, receiver, config)
             const email: SendMailOptions = {
                 from: smtp.from,
                 to: receiver,
                 subject: preparer.subject,
                 text: preparer.text,
-                html: preparer.html,
+                html: await preparer.html(),
                 attachments: preparer.attachments,
-                raw: message.bodyRawContent,
+                headers: preparer.headers,
             }
-            const sentMessage = await transporter.sendMail(email)
-            console.info(typeof sentMessage, sentMessage)
+            await transporter.sendMail(email)
         }
         logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
         console.info([progressData.progress], 'Sent: ' + receiver);

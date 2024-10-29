@@ -43,6 +43,7 @@ export default {
     resetImage(close = false) {
       this.newImage = {
         isInline: false,
+        isProcessed: false,
       };
       if (close) {
         this.$emit('close');
@@ -76,12 +77,11 @@ export default {
       }
 
       image.onload = (event) => {
-        console.log(event)
         this.newImage.width = this.width || image.width;
         this.newImage.filename = this.newImage.file?.name;
         this.newImage.filetype = this.newImage.file?.type;
       };
-      reader.readAsDataURL(this.newImage.file);
+      reader.readAsArrayBuffer(this.newImage.file);
       image.src = blob;
 
       return blob;

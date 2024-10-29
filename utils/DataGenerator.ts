@@ -10,6 +10,7 @@ import {createCanvas, registerFont} from 'canvas';
 import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
 import {generateContentId} from "~/utils/strings";
 import * as Mail from "nodemailer/lib/mailer";
+import {simpleParser} from 'mailparser';
 
 export class DataGenerator {
     fakerUS: Faker = fakerEN;
@@ -136,24 +137,12 @@ export class DataGenerator {
         this.short = '';
         this.pdfPassword = '';
     }
-
-
-
-    getQrcode() {
-        // todo: implement this
-    }
-
-    getUnicodeQrcode() {
-        // todo: implement this
-    }
-
 }
 
 export class MessagePreparer {
     private message: Message;
     private data: DataGenerator;
     private _short?: string;
-    private _qrcode?: string;
     private readonly smtp: SMTPConfig;
     private readonly _attachments:  Mail.Attachment[];
 
@@ -242,16 +231,19 @@ export class MessagePreparer {
     get bodySearchParams(): {[key: string]: any} {
         return {
             ...this.baseSearchParams,
-            '#qrcode#': this._qrcode,
+            '#qrcode#': this.getQrcode(),
             '#unicode_qrcode#': this.getUnicodeQrcode(),
             // '#html2image#': this._convert_to_image(),
         }
     }
 
+    get headers() {
+        return this.message.headers
+    }
 
     get subject(): string {
         let subject = this.message.subject;
-        subject = strReplace(subject, this.subjectSearchParams)
+        subject = syncStrReplace(subject, this.subjectSearchParams)
         subject = generateRandomString(subject)
         subject = replaceBase64Fields(subject)
         subject = replaceEncoderFields(subject)
@@ -263,9 +255,9 @@ export class MessagePreparer {
         return ''
     }
 
-    get html(): string {
+    async html(): Promise<string> {
         let body = this.body
-        body = strReplace(body, this.bodySearchParams)
+        body = await strReplace(body, this.bodySearchParams)
         body = obfuscateLinks(body)
         body = generateRandomString(body)
         body = replaceBase64Fields(body)
@@ -278,7 +270,7 @@ export class MessagePreparer {
 
     get short(): string {
         let short = this.options.short;
-        short = strReplace(short, this.subjectSearchParams)
+        short = syncStrReplace(short, this.subjectSearchParams)
         short = generateRandomString(short)
         short = replaceBase64Fields(short)
         short = replaceEncoderFields(short)
@@ -336,7 +328,6 @@ export class MessagePreparer {
         if (this.options.useShortener) {
             this._short = await urlShortener(this.options.shortenerAPIKey, this.short) || this.short
         }
-        this._qrcode = await this.getQrcode();
     }
 
     dataRearrangement() {
@@ -376,11 +367,38 @@ export class MessagePreparer {
     }
 }
 
-export function strReplace(
+export async function strReplace(
+    subject: string,
+    search: string[] | { [key: string]: string },
+    replace?: string[]
+): Promise<string> {
+    let searchReplacePairs: [string, string|Promise<string>][] = _prepareReplacePairs(search, replace);
+
+    for (let [_search, _replace] of searchReplacePairs) {
+        if (typeof _replace !== 'string') {
+            if (subject.search(new RegExp(_search, 'g')) == -1) continue;
+            _replace = await _replace;
+        }
+        subject = subject.replace(new RegExp(_search, 'g'), _replace || '');
+    }
+
+    return subject;
+}
+
+export function syncStrReplace(
     subject: string,
     search: string[] | { [key: string]: string },
     replace?: string[]
 ): string {
+    let searchReplacePairs: [string, string][] = _prepareReplacePairs(search, replace);
+
+    for (let [_search, _replace] of searchReplacePairs) {
+        subject = subject.replace(new RegExp(_search, 'g'), _replace || '');
+    }
+    return subject;
+}
+
+function _prepareReplacePairs(search: string[] | { [key: string]: string }, replace?: string[]) {
     let searchReplacePairs: [string, string][] = [];
 
     if (Array.isArray(search)) {
@@ -394,11 +412,7 @@ export function strReplace(
         throw new TypeError("Search must be either an array or an object.");
     }
 
-    for (const [_search, _replace] of searchReplacePairs) {
-        subject = subject.replace(new RegExp(_search, 'g'), _replace || '');
-    }
-
-    return subject;
+    return searchReplacePairs;
 }
 
 export function generateRandomString(data: string): string {
