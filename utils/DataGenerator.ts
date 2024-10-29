@@ -10,7 +10,6 @@ import {createCanvas, registerFont} from 'canvas';
 import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
 import {generateContentId} from "~/utils/strings";
 import * as Mail from "nodemailer/lib/mailer";
-import {simpleParser} from 'mailparser';
 
 export class DataGenerator {
     fakerUS: Faker = fakerEN;
@@ -238,7 +237,31 @@ export class MessagePreparer {
     }
 
     get headers() {
-        return this.message.headers
+        const headers = {};
+        if (this.options.headers.useHeaders) {
+            headers.list = {
+                help: this.options.headers.help,
+                unsubscribe: {
+                    url: this.options.headers.unsubscribe,
+                    comment: 'Unsubscribe'
+                },
+                subscribe: [
+                    {
+                        url: this.options.headers.subscribe,
+                        comment: 'Subscribe'
+                    }
+                ],
+                post: [
+                    [
+                        {
+                            url: this.options.headers.post,
+                            comment: 'Post'
+                        }
+                    ]
+                ]
+            }
+        }
+        return {...headers, ...this.message.headers}
     }
 
     get subject(): string {
@@ -636,7 +659,7 @@ export function obfuscateLinks(letterToObfLink: string): string {
 }
 
 export function replaceBase64Fields(letter: string): string {
-    const pattern = /#base64#\[([^\]]+)\]/g;
+    const pattern = /#base64#\[([^\]]+)]/g;
 
     return letter.replace(pattern, (match, p1) => {
         return Buffer.from(p1).toString('base64');
@@ -644,7 +667,7 @@ export function replaceBase64Fields(letter: string): string {
 }
 
 export function replaceEncoderFields(letter: string): string {
-    const pattern = /#encode#\[([^\]]+)\]/g;
+    const pattern = /#encode#\[([^\]]+)]/g;
 
     return letter.replace(pattern, (match, p1) => {
         return encrypt(p1);

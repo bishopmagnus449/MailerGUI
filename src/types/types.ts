@@ -64,6 +64,13 @@ export interface MailerConfig {
         host: string,
         port: number,
     },
+    headers: {
+        useHeaders: boolean,
+        unsubscribe?: string,
+        subscribe?: string,
+        post?: string,
+        help?: string,
+    },
 }
 
 type WebSocketLogType = 'log' | 'success' | 'info' | 'warning' | 'danger' | 'progress' | 'reset'

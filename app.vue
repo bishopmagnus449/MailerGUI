@@ -63,7 +63,7 @@
             <b-switch left-label v-model="globalConfig.proxy.useProxy">Use Proxy</b-switch>
           </b-field>
 
-          <b-field expanded grouped>
+          <b-field expanded>
             <b-collapse class="is-flex-grow-1" v-model="globalConfig.proxy.useProxy" animation="slide">
               <b-field grouped expanded class="is-flex">
                 <b-select v-model="globalConfig.proxy.protocol" :required="globalConfig.proxy.useProxy" placeholder="Protocol">
@@ -73,6 +73,30 @@
 
                 <b-input v-model="globalConfig.proxy.host" placeholder="Host" :required="globalConfig.proxy.useProxy" expanded />
                 <b-input v-model="globalConfig.proxy.port" placeholder="Port" :required="globalConfig.proxy.useProxy" class="port-field" type="number" />
+              </b-field>
+            </b-collapse>
+          </b-field>
+
+          <b-field label="Global Headers">
+            <b-switch left-label v-model="globalConfig.headers.useHeaders">Use Global Headers</b-switch>
+          </b-field>
+
+          <b-field expanded>
+            <b-collapse class="is-flex-grow-1" v-model="globalConfig.headers.useHeaders">
+              <b-field expanded>
+                <b-input v-model="globalConfig.headers.unsubscribe" placeholder="List Unsubscribe e.g. http://example.com/unsubscribe"/>
+              </b-field>
+
+              <b-field expanded>
+                <b-input v-model="globalConfig.headers.subscribe" placeholder="List Subscribe e.g. http://example.com/subscribe"/>
+              </b-field>
+
+              <b-field expanded>
+                <b-input v-model="globalConfig.headers.post" placeholder="List Post e.g. http://example.com/post"/>
+              </b-field>
+
+              <b-field expanded>
+                <b-input v-model="globalConfig.headers.help" placeholder="List Help e.g. http://example.com/help"/>
               </b-field>
             </b-collapse>
           </b-field>
@@ -330,6 +354,9 @@ export default {
         },
         proxy: {
           useProxy: false,
+        },
+        headers: {
+          useHeaders: false,
         },
       } as MailerConfig,
       tableDraggingRow: null as string | null,
