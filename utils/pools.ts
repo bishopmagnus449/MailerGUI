@@ -1,6 +1,6 @@
 import nodemailer, {type Transporter} from "nodemailer";
 import GenericPool from "generic-pool";
-import {SMTPConfig} from "~/src/types/types";
+import {SMTPConfig, MailerConfig} from "~/src/types/types";
 import {WebSocketLogger} from "~/utils/WebSocketLogger";
 
 const logger = WebSocketLogger.getInstance();
@@ -8,27 +8,44 @@ const logger = WebSocketLogger.getInstance();
 export class SMTPTransporterPool {
     private pool?: GenericPool.Pool<Transporter>;
     private static instance: SMTPTransporterPool;
+    private smtpOptions?: SMTPConfig;
 
-    constructor(SMTPOptions?: SMTPConfig, max = 10) {
-        if (SMTPOptions) {
-            this.setup(SMTPOptions, max);
+    constructor(SMTPOptions?: SMTPConfig, globalConfig?: MailerConfig) {
+        this.smtpOptions = SMTPOptions;
+        if (SMTPOptions && globalConfig) {
+            this.setup(SMTPOptions, globalConfig);
         }
     }
 
-    setup(SMTPOptions: SMTPConfig, max: number) {
+    setup(SMTPOptions: SMTPConfig, globalConfig: MailerConfig) {
 
         if (!this.pool) {
             console.info('Initializing SMTP pool');
             logger.sendLog({type: 'warning', message: 'Initializing SMTP pool'});
+            let proxy = undefined;
+            if (globalConfig.proxy.useProxy) {
+                proxy = `${globalConfig.proxy.protocol}//${globalConfig.proxy.host}:${globalConfig.proxy.port}`
+            }
+
             this.pool = GenericPool.createPool({
                     create: async () => {
                         console.info("Creating SMTP transport");
                         logger.sendLog({type: 'warning', message: 'Creating SMTP transport'});
-                        return nodemailer.createTransport({auth: {user: SMTPOptions.user, pass: SMTPOptions.pass}, ...SMTPOptions});
+                        try {
+                            const transporter =  nodemailer.createTransport({auth: {user: SMTPOptions.user, pass: SMTPOptions.pass}, secure: SMTPOptions.port == 465, proxy, ...SMTPOptions});
+                            if (globalConfig.proxy.useProxy && globalConfig.proxy.protocol == 'socks5') {
+                                transporter.set('proxy_socks_module', require('socks'));
+                            }
+                            return transporter;
+                        } catch (e: any) {
+                            logger.sendLog({type: 'danger', message: e.message})
+                            throw e
+                        }
+
                     },
                     destroy: async (transporter: Transporter) => transporter.close(),
                 },
-                {max});
+                {max: globalConfig.workers});
         }
     }
 
@@ -43,9 +60,11 @@ export class SMTPTransporterPool {
         await this.pool?.release(transporter);
     }
 
-    static getInstance(SMTPOptions: SMTPConfig, max = 10): SMTPTransporterPool {
+    static getInstance(SMTPOptions: SMTPConfig, globalConfig: MailerConfig): SMTPTransporterPool {
         if (!this.instance) {
-            this.instance = new this(SMTPOptions, max);
+            this.instance = new this(SMTPOptions, globalConfig);
+        } else if (this.instance.smtpOptions !== SMTPOptions) {
+            this.instance = new this(SMTPOptions, globalConfig);
         }
         return this.instance;
     }

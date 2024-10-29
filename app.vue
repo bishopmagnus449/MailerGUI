@@ -58,6 +58,25 @@
             </b-field>
 
           </b-field>
+
+          <b-field label="Proxy">
+            <b-switch left-label v-model="globalConfig.proxy.useProxy">Use Proxy</b-switch>
+          </b-field>
+
+          <b-field expanded grouped>
+            <b-collapse class="is-flex-grow-1" v-model="globalConfig.proxy.useProxy" animation="slide">
+              <b-field grouped expanded class="is-flex">
+                <b-select v-model="globalConfig.proxy.protocol" :required="globalConfig.proxy.useProxy" placeholder="Protocol">
+                  <option value="http">HTTP</option>
+                  <option value="socks5">Socks</option>
+                </b-select>
+
+                <b-input v-model="globalConfig.proxy.host" placeholder="Host" :required="globalConfig.proxy.useProxy" expanded />
+                <b-input v-model="globalConfig.proxy.port" placeholder="Port" :required="globalConfig.proxy.useProxy" class="port-field" type="number" />
+              </b-field>
+            </b-collapse>
+          </b-field>
+
         </form>
 
 
@@ -308,6 +327,9 @@ export default {
           fontSize: '3.75px',
           foregroundColor: 'black',
           backgroundColor: 'transparent',
+        },
+        proxy: {
+          useProxy: false,
         },
       } as MailerConfig,
       tableDraggingRow: null as string | null,
@@ -680,6 +702,10 @@ body div#__nuxt {
   position: sticky;
   top: 0;
   z-index: 10000;
+}
+
+.port-field {
+  width: 120px;
 }
 
 .container {

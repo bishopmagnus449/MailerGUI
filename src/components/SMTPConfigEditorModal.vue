@@ -86,9 +86,3 @@ export default defineComponent({
     </div>
   </form>
 </template>
-
-<style scoped lang="scss">
-.port-field {
-  width: 120px;
-}
-</style>
