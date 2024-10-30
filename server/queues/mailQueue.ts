@@ -104,7 +104,9 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
                 html: await preparer.html(),
                 attachments: preparer.attachments,
                 headers: preparer.headers,
+                list: preparer.listHeaders,
             }
+            console.log(email)
             await transporter.sendMail(email)
         }
         logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});

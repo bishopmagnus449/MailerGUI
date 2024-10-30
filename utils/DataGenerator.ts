@@ -236,10 +236,9 @@ export class MessagePreparer {
         }
     }
 
-    get headers() {
-        const headers = {};
+    get listHeaders() {
         if (this.options.headers.useHeaders) {
-            headers.list = {
+            return {
                 help: this.options.headers.help,
                 unsubscribe: {
                     url: this.options.headers.unsubscribe,
@@ -261,7 +260,10 @@ export class MessagePreparer {
                 ]
             }
         }
-        return {...headers, ...this.message.headers}
+    }
+
+    get headers() {
+        return this.message.headers
     }
 
     get subject(): string {
