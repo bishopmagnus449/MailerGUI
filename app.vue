@@ -82,7 +82,7 @@
           </b-field>
 
           <b-field expanded>
-            <b-collapse class="is-flex-grow-1" v-model="globalConfig.headers.useHeaders">
+            <b-collapse class="is-flex-grow-1" animation="slide" v-model="globalConfig.headers.useHeaders">
               <b-field expanded>
                 <b-input v-model="globalConfig.headers.unsubscribe" placeholder="List Unsubscribe e.g. http://example.com/unsubscribe"/>
               </b-field>
