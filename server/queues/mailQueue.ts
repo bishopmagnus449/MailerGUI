@@ -21,7 +21,7 @@ export class MailQueue {
     private progressData: { count: number; progress: number };
 
     private constructor(private config: MailerConfig) {
-        const connection = new IORedis({host: 'localhost', port: 6379, maxRetriesPerRequest: null, reconnectOnError: () => 2});
+        const connection = new IORedis({host: 'redis', port: 6379, maxRetriesPerRequest: null, reconnectOnError: () => 2});
         this.queue = new Queue('mailQueue', {connection, defaultJobOptions: {removeOnComplete: true}});
         this.worker = new Worker('mailQueue', processEmail, {connection, concurrency: this.config.workers});
         this.progressData = progressData;
