@@ -280,7 +280,7 @@
 
       </b-step-item>
 
-      <b-step-item class="is-flex-grow-1" :class="{'is-flex': activeStep=='progress'}" value="progress" icon="progress-clock" label="Progress" :clickable="false" tabindex="4">
+      <b-step-item class="is-flex-grow-1" :class="{'is-flex': activeStep=='progress'}" value="progress" icon="progress-clock" label="Progress" clickable tabindex="4">
         <WebsocketLogger />
       </b-step-item>
 

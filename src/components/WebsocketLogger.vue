@@ -5,9 +5,17 @@ import {type WebsocketLog} from "@/src/types/types";
 const history = ref<WebsocketLog[]>([])
 history.value.push({type: 'info', message: 'Connecting to websocket...'})
 
-const {data} = useWebSocket(`ws://${location.host}/api/websocket`)
+const {data} = useWebSocket(`ws://${location.host}/api/websocket`, {
+  autoReconnect: true,
+  onDisconnected() {
+    history.value.push({type: 'warning', message: 'Disconnected from WebSocket, reconnecting...'})
+  },
+  onConnected() {
+    history.value.push({type: 'success', message: 'Connected to WebSocket'})
+  }})
 const progress = ref<number>(undefined);
 const remaining = ref<number>(undefined);
+
 
 async function checkQueues() {
   const {data} = await useFetch('/api/email/ping');
