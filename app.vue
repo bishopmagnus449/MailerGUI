@@ -520,7 +520,7 @@ export default {
           'user': require_login ? smtp_info[2] : undefined,
           'pass': require_login ? smtp_info[3] : undefined,
 
-          'from': smtp_info.at(-1),
+          'from': {address: smtp_info.at(-1)},
         }
       }
 
