@@ -12,7 +12,7 @@ export default defineComponent({
 
   data() {
     return {
-      currentConfig: {...this.config} as SMTPConfig
+      currentConfig: {from: {}, ...this.config} as SMTPConfig
     }
   },
 
@@ -53,24 +53,29 @@ export default defineComponent({
 
         <b-field grouped>
           <b-field label="Host" label-position="on-border" expanded>
-            <b-input icon="server" v-model="currentConfig.host" required></b-input>
+            <b-input icon="server" v-model="currentConfig.host" required/>
           </b-field>
 
           <b-field label="Port" label-position="on-border" class="port-field is-flex-shrink-4">
-            <b-input icon="numeric" v-model="currentConfig.port" type="number" required></b-input>
+            <b-input icon="numeric" v-model="currentConfig.port" type="number" required/>
           </b-field>
         </b-field>
 
         <b-field label="Username" label-position="on-border">
-          <b-input icon="account" v-model="currentConfig.user" ></b-input>
+          <b-input icon="account" v-model="currentConfig.user"/>
         </b-field>
 
         <b-field label="Password" label-position="on-border">
-          <b-input icon="lock" v-model="currentConfig.pass" type="password"  password-reveal></b-input>
+          <b-input icon="lock" v-model="currentConfig.pass" type="password" password-reveal/>
         </b-field>
 
-        <b-field label="From Address" label-position="on-border">
-          <b-input icon="email" v-model="currentConfig.from" type="email" required></b-input>
+        <b-field grouped expanded>
+          <b-field expanded label="From Name" label-position="on-border">
+            <b-input expanded icon="rename" v-model="currentConfig.from.name"/>
+          </b-field>
+          <b-field expanded label="From Address" label-position="on-border">
+            <b-input expanded icon="email" v-model="currentConfig.from.address" type="email" required/>
+          </b-field>
         </b-field>
 
       </section>

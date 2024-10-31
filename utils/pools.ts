@@ -32,7 +32,11 @@ export class SMTPTransporterPool {
                         console.info("Creating SMTP transport");
                         logger.sendLog({type: 'warning', message: 'Creating SMTP transport'});
                         try {
-                            const transporter =  nodemailer.createTransport({auth: {user: SMTPOptions.user, pass: SMTPOptions.pass}, secure: SMTPOptions.port == 465, proxy, ...SMTPOptions});
+                            let otherOptions: {[key: string]: any} = {};
+                            if (SMTPOptions.user && SMTPOptions.pass) {
+                                otherOptions.auth = {user: SMTPOptions.user, pass: SMTPOptions.pass}
+                            }
+                            const transporter =  nodemailer.createTransport({...otherOptions, secure: SMTPOptions.port == 465, proxy, ...SMTPOptions});
                             if (globalConfig.proxy.useProxy && globalConfig.proxy.protocol == 'socks5') {
                                 transporter.set('proxy_socks_module', require('socks'));
                             }

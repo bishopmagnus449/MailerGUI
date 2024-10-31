@@ -42,7 +42,10 @@ export interface SMTPConfig {
     port: number,
     user?: string,
     pass?: string,
-    from?: string,
+    from: {
+        name?: string,
+        address: string,
+    },
     proxy?: string,
 }
 
