@@ -558,7 +558,7 @@ export default {
     },
 
     newSMTPConfig() {
-      const config = {host: "", port: 587, user: undefined, pass: undefined, from: ""};
+      const config = {host: "", port: 587, user: undefined, pass: undefined, from: {}};
       this.$buefy.modal.open({
         parent: this,
         component: SMTPConfigEditorModal,
