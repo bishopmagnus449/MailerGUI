@@ -2,6 +2,7 @@ import nodemailer, {type Transporter} from "nodemailer";
 import GenericPool from "generic-pool";
 import {SMTPConfig, MailerConfig} from "~/src/types/types";
 import {WebSocketLogger} from "~/utils/WebSocketLogger";
+import {deepEqual} from "~/utils/arrays";
 
 const logger = WebSocketLogger.getInstance();
 
@@ -67,7 +68,7 @@ export class SMTPTransporterPool {
     static getInstance(SMTPOptions: SMTPConfig, globalConfig: MailerConfig): SMTPTransporterPool {
         if (!this.instance) {
             this.instance = new this(SMTPOptions, globalConfig);
-        } else if (this.instance.smtpOptions !== SMTPOptions) {
+        } else if (!deepEqual(this.instance.smtpOptions, SMTPOptions)) {
             this.instance = new this(SMTPOptions, globalConfig);
         }
         return this.instance;
