@@ -755,10 +755,9 @@ export function generateUnicodeQrCode(
 ): string {
     // Create QR Code with specified options
     const qrOptions = {
-        errorCorrectionLevel: 'L', // Low error correction
-        version: 2,                // QR version
-        scale: 1,                  // Pixel scale
-        margin: 0                  // No border margin
+        errorCorrectionLevel: 'L',
+        scale: 1,
+        margin: 0
     };
 
     // Generate QR Code as a canvas
