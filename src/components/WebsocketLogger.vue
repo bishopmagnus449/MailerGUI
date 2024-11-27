@@ -6,7 +6,7 @@ const history = ref<WebsocketLog[]>([])
 
 function addToHistory(log: WebsocketLog) {
   history.value.push(log);
-  if (history.value.length > 100) {
+  if (history.value.length > 300) {
     history.value.shift();
   }
 }
