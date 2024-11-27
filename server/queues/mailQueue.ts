@@ -81,7 +81,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
     try {
         for (let message of messages) {
             if (message.messageType == 'raw') {
-                const parsedMessage = await simpleParser(message.bodyRawContent)
+                const parsedMessage = await simpleParser(message.bodyRawContent ?? '')
                 message = {
                     messageType: 'editor',
                     headers: parsedMessage.headers,
@@ -107,7 +107,6 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
                 headers: preparer.headers,
                 list: preparer.listHeaders,
             }
-            console.log(email)
             await transporter.sendMail(email)
         }
         logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
