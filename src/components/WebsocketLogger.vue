@@ -3,15 +3,23 @@ import {useWebSocket} from "@vueuse/core";
 import {type WebsocketLog} from "@/src/types/types";
 
 const history = ref<WebsocketLog[]>([])
-history.value.push({type: 'info', message: 'Connecting to websocket...'})
+
+function addToHistory(log: WebsocketLog) {
+  history.value.push(log);
+  if (history.value.length > 100) {
+    history.value.shift();
+  }
+}
+
+addToHistory({type: 'info', message: 'Connecting to websocket...'})
 
 const {data} = useWebSocket(`ws://${location.host}/api/websocket`, {
   autoReconnect: true,
   onDisconnected() {
-    history.value.push({type: 'warning', message: 'Disconnected from WebSocket, reconnecting...'})
+    addToHistory({type: 'warning', message: 'Disconnected from WebSocket, reconnecting...'})
   },
   onConnected() {
-    history.value.push({type: 'success', message: 'Connected to WebSocket'})
+    addToHistory({type: 'success', message: 'Connected to WebSocket'})
   }})
 const progress = ref<number>(undefined);
 const remaining = ref<number>(undefined);
@@ -36,7 +44,7 @@ watch(data, async (newValue: string) => {
     remaining.value = 0;
     return;
   }
-  history.value.push(log);
+  addToHistory(log);
   const logger = document.querySelector('.logger');
   if (logger) {
     setTimeout(async () => logger.scrollTop = logger.scrollHeight, 1)
