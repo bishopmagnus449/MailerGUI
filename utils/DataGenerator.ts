@@ -763,7 +763,6 @@ export function generateUnicodeQrCode(
     // Generate QR Code as a canvas
     const canvas = createCanvas(1, 1); // Placeholder size, will be resized by `QRcode.toCanvas`
 
-    // todo: check qrOptions
     // @ts-ignore
     QRCode.toCanvas(canvas, data, qrOptions);
     const ctx = canvas.getContext('2d');
