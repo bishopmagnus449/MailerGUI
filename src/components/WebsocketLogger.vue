@@ -30,6 +30,9 @@ watch(data, async (newValue: string) => {
   if (log.type == 'progress') {
     progress.value = log.message;
     remaining.value = log.options ? Math.max(log.options.remainingCount - 1, 0) : 0;
+    if (progress.value == '100') {
+      remaining.value = 0;
+    }
     return;
   }
   else if (log.type == 'reset') {
