@@ -31,7 +31,6 @@ export class MailQueue {
         logger.sendLog({type: 'progress', message: this.progressData.progress})
 
         this.worker.on('completed', async (job) => {
-            logger.sendLog({type: 'progress', message: Math.floor(this.progressData.progress / job.data.count * 100)})
 
             this.progressData.count = job.data.count;
             this.progressData.progress++;
@@ -118,6 +117,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
         console.error('Error: ' + receiver)
         console.error(e)
     } finally {
+        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100)})
         await transporterPool.release(transporter);
     }
 }
