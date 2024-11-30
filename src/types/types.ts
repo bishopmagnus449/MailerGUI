@@ -77,9 +77,18 @@ export interface MailerConfig {
 }
 
 type WebSocketLogType = 'log' | 'success' | 'info' | 'warning' | 'danger' | 'progress' | 'reset'
-export interface WebsocketLog {
+
+interface WebSocketBase {
     type: WebSocketLogType,
     message?: any,
 }
+
+interface WebSocketProgress {
+    type: 'progress',
+    message: number,
+    options?: any
+}
+
+export type WebsocketLog = WebSocketBase | WebSocketProgress;
 
 export type Step = 'config' | 'smtp' | 'message' | 'receivers' | 'progress'

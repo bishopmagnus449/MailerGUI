@@ -25,17 +25,11 @@ const progress = ref<number>(undefined);
 const remaining = ref<number>(undefined);
 
 
-async function checkQueues() {
-  const {data} = await useFetch('/api/email/ping');
-  remaining.value = data.value.remainingCount;
-}
-
-
 watch(data, async (newValue: string) => {
   const log: WebsocketLog = JSON.parse(newValue);
   if (log.type == 'progress') {
-    await checkQueues();
     progress.value = log.message;
+    remaining.value = log.options.remainingCount;
     return;
   }
   else if (log.type == 'reset') {

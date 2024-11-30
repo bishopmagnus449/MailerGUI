@@ -14,6 +14,18 @@ const progressData = {
     count: 0
 };
 
+const getOptions = async (instance: MailQueue) => {
+    const waitingCount = await instance.queue.getWaitingCount();
+    const activeCount = await instance.queue.getActiveCount();
+    return {
+        queueRunning: !await instance.queue.isPaused(),
+        workerRunning: instance.worker.isRunning(),
+        remainingCount: waitingCount + activeCount,
+        waitingCount,
+        activeCount
+    }
+}
+
 export class MailQueue {
     public queue: Queue;
     public worker: Worker;
@@ -114,7 +126,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
         console.error('Error: ' + receiver);
         console.error(e);
     } finally {
-        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100)});
+        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100), options: await getOptions(MailQueue.getInstance())});
         progressData.progress++;
         await transporterPool.release(transporter);
     }
