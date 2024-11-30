@@ -29,7 +29,7 @@ watch(data, async (newValue: string) => {
   const log: WebsocketLog = JSON.parse(newValue);
   if (log.type == 'progress') {
     progress.value = log.message;
-    remaining.value = Math.max(log.options.remainingCount - 1, 0);
+    remaining.value = log.options ? Math.max(log.options.remainingCount - 1, 0) : 0;
     return;
   }
   else if (log.type == 'reset') {
