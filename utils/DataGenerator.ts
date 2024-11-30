@@ -574,25 +574,29 @@ export async function urlShortener(apiKey: string, url: string): Promise<string 
         'Content-Type': 'application/json'
     };
 
-    // @ts-ignore
-    const { data, error } = await useFetch('https://api.azr.link/shorten', {
-        method: 'POST',
-        headers,
-        body: payload
-    });
+    try {
+        const response = await fetch('https://api.azr.link/shorten', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+        });
 
-    if (error.value) {
-        console.error('Shortening url failed:', error.value);
-        return;
+        if (!response.ok) {
+            console.error('Shortening URL failed:', response.statusText);
+            return;
+        }
+
+        const data = await response.json();
+        let shortUrl = data.shortUrl;
+
+        if (shortUrl && !shortUrl.startsWith('http')) {
+            shortUrl = `https://${shortUrl}`;
+        }
+
+        return shortUrl;
+    } catch (error) {
+        console.error('Shortening URL failed:', error);
     }
-
-    let shortUrl = data.value?.shortUrl;
-
-    if (shortUrl && !shortUrl.startsWith('http')) {
-        shortUrl = `https://${shortUrl}`;
-    }
-
-    return shortUrl;
 }
 
 export async function wordsToImages(words: string, fontSize: number, fontPath: string): Promise<string[]> {
