@@ -30,11 +30,7 @@ export class MailQueue {
 
         logger.sendLog({type: 'progress', message: this.progressData.progress})
 
-        this.worker.on('completed', async (job) => {
-
-            this.progressData.count = job.data.count;
-            this.progressData.progress++;
-        })
+        this.worker.on('completed', async (job) => {})
 
         this.worker.on('failed', (job, error) => {
             console.log('Error: ' + job?.data.receiver, error);
@@ -70,8 +66,9 @@ export class MailQueue {
 
 }
 
-async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig}>)  {
+async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig, count: number}>)  {
     const {smtp, receiver, messages, config} = job.data;
+    progressData.count = job.data.count;
 
     logger.sendLog({type: 'log', message: 'Sending to: ' + receiver});
     const transporterPool = SMTPTransporterPool.getInstance(smtp, config);
@@ -80,7 +77,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
     try {
         for (let message of messages) {
             if (message.messageType == 'raw') {
-                const parsedMessage = await simpleParser(message.bodyRawContent ?? '')
+                const parsedMessage = await simpleParser(message.bodyRawContent ?? '');
                 message = {
                     messageType: 'editor',
                     headers: parsedMessage.headers,
@@ -92,10 +89,10 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
                     })),
                     bodyHTMLEditor: parsedMessage.html,
                     subject: message.subject || parsedMessage.subject,
-                }
+                };
             }
 
-            const preparer = await MessagePreparer.setup(message, smtp, receiver, config)
+            const preparer = await MessagePreparer.setup(message, smtp, receiver, config);
             const email: SendMailOptions = {
                 from: smtp.from,
                 to: receiver,
@@ -105,8 +102,8 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
                 attachments: preparer.attachments,
                 headers: preparer.headers,
                 list: preparer.listHeaders,
-            }
-            await transporter.sendMail(email)
+            };
+            await transporter.sendMail(email);
         }
         logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
         console.info([progressData.progress], 'Sent: ' + receiver);
@@ -114,10 +111,11 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
         logger.sendLog({type: 'danger', message: 'Error: ' + receiver});
         logger.sendLog({type: 'danger', message: e.message});
 
-        console.error('Error: ' + receiver)
-        console.error(e)
+        console.error('Error: ' + receiver);
+        console.error(e);
     } finally {
-        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100)})
+        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100)});
+        progressData.progress++;
         await transporterPool.release(transporter);
     }
 }
