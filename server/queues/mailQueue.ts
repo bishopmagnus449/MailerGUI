@@ -14,7 +14,7 @@ const progressData = {
     count: 0
 };
 
-const getOptions = async (instance: MailQueue) => {
+const getQueueInfo = async (instance: MailQueue) => {
     const waitingCount = await instance.queue.getWaitingCount();
     const activeCount = await instance.queue.getActiveCount();
     return {
@@ -85,6 +85,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
     logger.sendLog({type: 'log', message: 'Sending to: ' + receiver});
     const transporterPool = SMTPTransporterPool.getInstance(smtp, config);
     const transporter = await transporterPool.acquire();
+    const queueInfo = await getQueueInfo(MailQueue.getInstance());
 
     try {
         for (let message of messages) {
@@ -117,7 +118,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
             };
             await transporter.sendMail(email);
         }
-        logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
+        logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${queueInfo.remainingCount || '-'}] ` + 'Sent: ' + receiver});
         console.info([progressData.progress], 'Sent: ' + receiver);
     } catch (e: any) {
         logger.sendLog({type: 'danger', message: 'Error: ' + receiver});
@@ -126,7 +127,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
         console.error('Error: ' + receiver);
         console.error(e);
     } finally {
-        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100), options: await getOptions(MailQueue.getInstance())});
+        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / queueInfo.remainingCount * 100), options: queueInfo});
         progressData.progress++;
         await transporterPool.release(transporter);
     }
