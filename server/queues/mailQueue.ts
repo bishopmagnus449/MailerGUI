@@ -118,7 +118,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
             };
             await transporter.sendMail(email);
         }
-        logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${queueInfo.remainingCount || '-'}] ` + 'Sent: ' + receiver});
+        logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
         console.info([progressData.progress], 'Sent: ' + receiver);
     } catch (e: any) {
         logger.sendLog({type: 'danger', message: 'Error: ' + receiver});
@@ -127,7 +127,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
         console.error('Error: ' + receiver);
         console.error(e);
     } finally {
-        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / queueInfo.remainingCount * 100), options: queueInfo});
+        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100), options: queueInfo});
         progressData.progress++;
         await transporterPool.release(transporter);
     }
