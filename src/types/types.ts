@@ -1,4 +1,5 @@
 import {SendMailOptions} from 'nodemailer'
+import Mail from "nodemailer/lib/mailer";
 
 export interface HTMLImage {
     alt?: string,
@@ -42,10 +43,7 @@ export interface SMTPConfig {
     port: number,
     user?: string,
     pass?: string,
-    from: {
-        name?: string,
-        address: string,
-    },
+    from: Mail.Address,
     proxy?: string,
 }
 

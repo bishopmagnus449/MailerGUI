@@ -107,7 +107,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
 
             const preparer = await MessagePreparer.setup(message, smtp, receiver, config);
             const email: SendMailOptions = {
-                from: smtp.from,
+                from: preparer.prepareText(smtp.from),
                 to: receiver,
                 subject: preparer.subject,
                 text: preparer.text,

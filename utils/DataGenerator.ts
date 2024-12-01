@@ -160,6 +160,33 @@ export class MessagePreparer {
         return instance;
     }
 
+    prepareText<T>(input: T): T {
+        const processString = (text: string): string => {
+            text = syncStrReplace(text, this.subjectSearchParams);
+            text = generateRandomString(text);
+            text = replaceBase64Fields(text);
+            text = replaceEncoderFields(text);
+            text = replaceHiddenDash(text);
+            return text;
+        };
+
+        if (typeof input === 'string') {
+            return processString(input) as T;
+        }
+
+        if (Array.isArray(input)) {
+            return input.map((item) => this.prepareText(item)) as T;
+        }
+
+        if (input !== null && typeof input === 'object') {
+            return Object.fromEntries(
+                Object.entries(input).map(([key, value]) => [key, this.prepareText(value)])
+            ) as T;
+        }
+
+        return input;
+    }
+
     get baseSearchParams() {
         return {
             '#date#': this.data.date,
