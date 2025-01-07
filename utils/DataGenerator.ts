@@ -597,12 +597,12 @@ export async function urlShortener(apiKey: string, url: string): Promise<string 
     };
 
     const headers = {
-        'Ocp-Apim-Subscription-Key': apiKey,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json'
     };
 
     try {
-        const response = await fetch('https://api.azr.link/shorten', {
+        const response = await fetch('https://api.aws3.link/shorten', {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
