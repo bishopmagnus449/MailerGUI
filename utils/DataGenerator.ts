@@ -725,7 +725,7 @@ export function replaceEncryptedShort(letter: string, short: string): string {
 }
 
 export function replaceEncodedShort(letter: string, short: string): string {
-    const pattern = /#encoded_short#\[([^\]])]/g;
+    const pattern = /#encoded_short#\[([^\]]+)]/g;
     const html = `\n<span class="hidden-text">${btoa(generateRandomString("#LET-MIX-16#"))}=${btoa(generateRandomString("#LETNUM-MIX-4#"))}</span>\n<html>\n<head>\n    <meta charset="UTF-8">\n    <meta http-equiv="refresh" content="2;url=${short}">  \n    <title>Home</title>\n    <style>\n        .hidden-text {\n            color: white;\n            visibility: hidden;\n        }\n    </style>\n</head>\n<body>\n</body>\n</html>\n<span class="hidden-text">${btoa(generateRandomString("#LETNUM-MIX-16#"))}--${btoa(generateRandomString("#LETNUM-MIX-16#"))}</span>\n    `;
     return letter.replace(pattern, (match, p1) => {
         return `https://${p1}/?${generateRandomString("#LET-MIX-8#")}=${customEncoder(html)}`;
