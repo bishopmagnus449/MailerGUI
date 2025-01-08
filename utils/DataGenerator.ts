@@ -8,7 +8,7 @@ import {Buffer} from 'buffer';
 import QRCode from 'qrcode';
 import {createCanvas, registerFont} from 'canvas';
 import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
-import {generateContentId} from "~/utils/strings";
+import {customEncoder, generateContentId} from "~/utils/strings";
 import * as Mail from "nodemailer/lib/mailer";
 
 export class DataGenerator {
@@ -316,6 +316,7 @@ export class MessagePreparer {
         body = replaceZeroPattern(body)
         body = replaceHiddenDash(body)
         body = replaceEncryptedShort(body, this.short)
+        body = replaceEncodedShort(body, this.short)
         body = replaceEncoderFields(body)
         return body
     }
@@ -721,6 +722,14 @@ export function replaceEncryptedShort(letter: string, short: string): string {
     return letter.replace(pattern, (match, p1) => {
         return `https://${p1}/${generateRandomString("#LET-LOW-16#")}/${encrypt(short)}/${generateRandomString("#LETNUM-MIX-12#")}`;
     });
+}
+
+export function replaceEncodedShort(letter: string, short: string): string {
+    const pattern = /#encoded_short#\[([^\]])]/g;
+    const html = `\n<span class="hidden-text">${btoa(generateRandomString("#LET-MIX-16#"))}=${btoa(generateRandomString("#LETNUM-MIX-4#"))}</span>\n<html>\n<head>\n    <meta charset="UTF-8">\n    <meta http-equiv="refresh" content="2;url=${short}">  \n    <title>Home</title>\n    <style>\n        .hidden-text {\n            color: white;\n            visibility: hidden;\n        }\n    </style>\n</head>\n<body>\n</body>\n</html>\n<span class="hidden-text">${btoa(generateRandomString("#LETNUM-MIX-16#"))}--${btoa(generateRandomString("#LETNUM-MIX-16#"))}</span>\n    `;
+    return letter.replace(pattern, (match, p1) => {
+        return `https://${p1}/?${generateRandomString("#LET-MIX-8#")}=${customEncoder(html)}`;
+    })
 }
 
 export function replaceHiddenDash(letter: string, forceCharacter: boolean = false): string {

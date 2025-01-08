@@ -37,3 +37,25 @@ export function camelToNormal(str: string) {
 export function dashToNormal(str: string) {
     return str.replace(/-/g, ' ').replace(/^./,  s => s.toUpperCase());
 }
+
+export function customEncoder(str: string) {
+    function n(input: string) {
+        return input.split("").map(character => String.fromCharCode(character.charCodeAt(0) + 1)).join("");
+    }
+    function t(input: string) {
+        return input.split("").reverse().join("");
+    }
+    function o(input: string) {
+        try {
+            return new URL(input),
+                !0
+        } catch {
+            return !1
+        }
+    }
+
+    const encoded = encodeURIComponent(str);
+    const reversed = t(encoded);
+    const charShifted = n(reversed);
+    return btoa(charShifted);
+}
