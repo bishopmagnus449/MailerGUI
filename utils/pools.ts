@@ -37,7 +37,7 @@ export class SMTPTransporterPool {
                             if (SMTPOptions.user && SMTPOptions.pass) {
                                 otherOptions.auth = {user: SMTPOptions.user, pass: SMTPOptions.pass}
                             }
-                            const transporter =  nodemailer.createTransport({...otherOptions, secure: SMTPOptions.port == 465, proxy, ...SMTPOptions});
+                            const transporter =  nodemailer.createTransport({...otherOptions, secure: SMTPOptions.port == 465, proxy, ...SMTPOptions, tls: {rejectUnauthorized: false, checkServerIdentity: () => { return null; }}});
                             if (globalConfig.proxy.useProxy && globalConfig.proxy.protocol == 'socks5') {
                                 transporter.set('proxy_socks_module', require('socks'));
                             }
