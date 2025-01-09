@@ -12,9 +12,9 @@ export default defineEventHandler(async (event) => {
     await queue.queue.drain();
 
     logger.sendLog({type: 'reset'})
-    receivers.map(async receiver => await queue.queue.add('', {
+    receivers.map(async (receiver: string) => await queue.queue.add('', {
         smtp,
-        receiver,
+        receiver: receiver.trim(),
         count: receivers.length,
         messages: body.messages,
         config,
