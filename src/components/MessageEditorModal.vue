@@ -455,7 +455,10 @@ export default defineComponent({
       const imgElement = tempDiv.querySelector('img');
       if (!imgElement) throw new Error('Internal Bug');
 
-      const src = imgElement.getAttribute('src') || '';
+      let src = imgElement.getAttribute('src') || '';
+      if (/^https?:\/\//i.test(src)) {
+        src = src.split('/').reverse()[0].split(/[?#]/)[0]
+      }
       const alt = imgElement.getAttribute('alt') || '';
       const width = Number(imgElement.getAttribute('width')) || undefined;
 
@@ -473,7 +476,7 @@ export default defineComponent({
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
         this.currentMessage.bodyHTMLContent = (e.target?.result as string);
-        const images = this.currentMessage.bodyHTMLContent.match(/(<img\s+(?:[^>]*\n)*[^>]*src=["']#local_image#(?:[^>]*\n)*[^>]*>)/g)
+        const images = this.currentMessage.bodyHTMLContent.match(/(<img\s+(?:[^>]*\n)*[^>]*src=["'](?:#local_image#|http)(?:[^>]*\n)*[^>]*>)/g)
         if (images) {
           this.currentMessage.bodyHTMLImages = images.map((img: string) => this.parseImgTag(img))
         } else {
