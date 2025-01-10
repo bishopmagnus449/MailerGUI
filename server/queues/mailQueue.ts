@@ -115,6 +115,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
                 attachments: preparer.attachments,
                 headers: preparer.headers,
                 list: preparer.listHeaders,
+                replyTo: `support@${smtp.host}`,
             };
             await transporter.sendMail(email);
         }

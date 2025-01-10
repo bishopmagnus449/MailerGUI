@@ -290,7 +290,16 @@ export class MessagePreparer {
     }
 
     get headers() {
-        return this.message.headers
+        const trackingId = `uid-${Math.random().toString(36).substring(2, 9)}`;
+        return {
+            'Message-ID': `<${Date.now().toString(16)}-${Date.now().toString(32)}@${this.data.domainSmtp}>`,
+            'X-Recipient': this.receiver,
+            'X-Tracking-ID': trackingId,
+            'X-Mailer': 'NuxtMailer 1.0',
+            'X-Sender': `no-reply@${this.data.domainSmtp}`,
+            'List-Unsubscribe': `<mailto:unsubscribe@${this.data.domainSmtp}?uid=${trackingId}>`,
+            ...this.message.headers
+        };
     }
 
     get subject(): string {
