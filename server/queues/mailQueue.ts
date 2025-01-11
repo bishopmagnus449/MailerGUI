@@ -110,7 +110,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
                 from: preparer.prepareText(smtp.from),
                 to: receiver,
                 subject: preparer.subject,
-                text: preparer.text,
+                text: await preparer.text(),
                 html: await preparer.html(),
                 attachments: preparer.attachments,
                 headers: preparer.headers,

@@ -27,6 +27,7 @@ type MessageType = 'html' | 'raw' | 'editor';
 
 export interface Message {
     subject: string,
+    text: string,
     attachments: Attachment[],
     messageType: MessageType,
     bodyHTMLFile?: File,

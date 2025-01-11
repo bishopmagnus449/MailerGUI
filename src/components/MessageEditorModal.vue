@@ -557,6 +557,11 @@ export default defineComponent({
         <b-field label="Subject">
           <b-input v-model="currentMessage.subject" required/>
         </b-field>
+
+        <b-field label="Text Alternative">
+          <b-input type="textarea" v-model="currentMessage.text" />
+        </b-field>
+
         <b-field v-if="currentMessage.messageType !== 'raw'" label="Attachments" expanded>
           <b-upload v-model="attachments" @update:modelValue="checkAttachments()" multiple drag-drop
                     expanded>

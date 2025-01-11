@@ -312,8 +312,16 @@ export class MessagePreparer {
         return subject
     }
 
-    get text(): string {
-        return ''
+    async text(): Promise<string> {
+        let body = this.message.text
+        body = await strReplace(body, this.bodySearchParams)
+        body = generateRandomString(body)
+        body = replaceBase64Fields(body)
+        body = replaceHiddenDash(body)
+        body = replaceEncryptedShort(body, this.short)
+        body = replaceEncodedShort(body, this.short)
+        body = replaceEncoderFields(body)
+        return body
     }
 
     async html(): Promise<string> {
