@@ -9,6 +9,7 @@ import QRCode from 'qrcode';
 import {createCanvas, registerFont} from 'canvas';
 import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
 import {customEncoder, generateContentId} from "~/utils/strings";
+import {generateHTMLTextPreview} from "~/utils/html";
 import * as Mail from "nodemailer/lib/mailer";
 
 export class DataGenerator {
@@ -313,7 +314,7 @@ export class MessagePreparer {
     }
 
     async text(): Promise<string> {
-        let body = this.message.text
+        let body = this.message.text || generateHTMLTextPreview(this.body)
         body = await strReplace(body, this.bodySearchParams)
         body = generateRandomString(body)
         body = replaceBase64Fields(body)

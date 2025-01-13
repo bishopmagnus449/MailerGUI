@@ -559,7 +559,7 @@ export default defineComponent({
         </b-field>
 
         <b-field label="Text Alternative">
-          <b-input type="textarea" v-model="currentMessage.text" />
+          <b-input type="textarea" v-model="currentMessage.text" placeholder="It will be generated automatically, you can input your text instead..."/>
         </b-field>
 
         <b-field v-if="currentMessage.messageType !== 'raw'" label="Attachments" expanded>
