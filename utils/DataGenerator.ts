@@ -165,6 +165,7 @@ export class MessagePreparer {
         const processString = (text: string): string => {
             text = syncStrReplace(text, this.subjectSearchParams);
             text = generateRandomString(text);
+            text = replaceURIFields(text);
             text = replaceBase64Fields(text);
             text = replaceEncoderFields(text);
             text = replaceHiddenDash(text);
@@ -307,6 +308,7 @@ export class MessagePreparer {
         let subject = this.message.subject;
         subject = syncStrReplace(subject, this.subjectSearchParams)
         subject = generateRandomString(subject)
+        subject = replaceURIFields(subject)
         subject = replaceBase64Fields(subject)
         subject = replaceEncoderFields(subject)
         subject = replaceHiddenDash(subject)
@@ -317,6 +319,7 @@ export class MessagePreparer {
         let body = this.message.text || generateHTMLTextPreview(this.body)
         body = await strReplace(body, this.bodySearchParams)
         body = generateRandomString(body)
+        body = replaceURIFields(body)
         body = replaceBase64Fields(body)
         body = replaceHiddenDash(body)
         body = replaceEncryptedShort(body, this.short)
@@ -330,6 +333,7 @@ export class MessagePreparer {
         body = await strReplace(body, this.bodySearchParams)
         body = obfuscateLinks(body)
         body = generateRandomString(body)
+        body = replaceURIFields(body)
         body = replaceBase64Fields(body)
         body = replaceZeroPattern(body)
         body = replaceHiddenDash(body)
@@ -343,6 +347,7 @@ export class MessagePreparer {
         let short = this.options.short;
         short = syncStrReplace(short, this.subjectSearchParams)
         short = generateRandomString(short)
+        short = replaceURIFields(short)
         short = replaceBase64Fields(short)
         short = replaceEncoderFields(short)
 
@@ -716,6 +721,14 @@ export function replaceBase64Fields(letter: string): string {
     return letter.replace(pattern, (match, p1) => {
         return Buffer.from(p1).toString('base64');
     });
+}
+
+export function replaceURIFields(letter: string): string {
+    const pattern = /#url_encode#\[([^\]]+)]/g;
+
+    return letter.replace(pattern, (match, p1) => {
+        return encodeURIComponent(p1);
+    })
 }
 
 export function replaceEncoderFields(letter: string): string {
