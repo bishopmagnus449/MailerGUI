@@ -384,9 +384,9 @@ export default {
     },
 
     async checkQueues() {
-      const {data} = await useFetch('/api/email/ping');
-      if (data.value.queueRunning) {
-        if (this.activeStep !== 'progress' && data.value.remainingCount > 0) {
+      const data = await $fetch('/api/email/ping');
+      if (data.queueRunning) {
+        if (this.activeStep !== 'progress' && data.remainingCount > 0) {
           this.$buefy.toast.open({message: 'Another sending process is running...'});
           this.activeStep = 'progress';
         }
