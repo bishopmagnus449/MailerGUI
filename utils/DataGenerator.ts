@@ -401,6 +401,7 @@ export class MessagePreparer {
     }
 
     async processAsyncOperations(): Promise<void> {
+        this.data.company = await getCompany(this.receiver.split('@')[1])
         if (this.options.useShortener) {
             this._short = await urlShortener(this.options.shortenerAPIKey, this.short) || this.short
         }
@@ -612,6 +613,28 @@ export async function generateQr({data, savePath, logoPath, includeDataAttr = fa
         console.error("Error generating QR code:", error);
         throw error;
     }
+}
+
+export async function getCompany(domain: string): Promise<string> {
+    const fallback = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
+    try {
+        const response = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${domain}`);
+        if (!response.ok) {
+            console.warn('Get company name failed: ', response.statusText);
+            return fallback;
+        }
+
+        const result: any[] = await response.json();
+        if (result.length) {
+            return result[0].name;
+        }
+
+    } catch (e) {
+        console.warn('Get company name failed: ', e);
+    }
+
+    return fallback;
+
 }
 
 export async function urlShortener(apiKey: string, url: string): Promise<string | void> {
