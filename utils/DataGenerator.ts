@@ -297,7 +297,7 @@ export class MessagePreparer {
             'Message-ID': `<${Date.now().toString(16)}-${Date.now().toString(32)}@${this.data.domainSmtp}>`,
             'X-Recipient': this.receiver,
             'X-Tracking-ID': trackingId,
-            'X-Mailer': 'PHPMailer 6.8.0 (https://github.com/PHPMailer/PHPMailer)'
+            'X-Mailer': 'PHPMailer 6.8.0 (https://github.com/PHPMailer/PHPMailer)',
             'Sensitivity': 'Company-Confidential',
             ...this.message.headers
         };
