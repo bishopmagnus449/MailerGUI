@@ -295,10 +295,8 @@ export class MessagePreparer {
         const trackingId = `uid-${Math.random().toString(36).substring(2, 9)}`;
         return {
             'Message-ID': `<${Date.now().toString(16)}-${Date.now().toString(32)}@${this.data.domainSmtp}>`,
-            'X-Recipient': this.receiver,
-            'X-Tracking-ID': trackingId,
-            'X-Mailer': 'PHPMailer 6.8.0 (https://github.com/PHPMailer/PHPMailer)',
-            'Sensitivity': 'Company-Confidential',
+            'X-Mailer': 'Microsoft Office Outlook, Build 11.0.6353',
+            'Sensitivity': 'Private',
             ...this.message.headers
         };
     }
