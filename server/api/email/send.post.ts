@@ -12,13 +12,16 @@ export default defineEventHandler(async (event) => {
     await queue.queue.drain();
 
     logger.sendLog({type: 'reset'})
-    receivers.map(async (receiver: string) => await queue.queue.add('', {
-        smtp,
-        receiver: receiver.trim(),
-        count: receivers.length,
-        messages: body.messages,
-        config,
-    }))
+
+    await Promise.all(receivers.map((receiver: string) =>
+        queue.queue.add('', {
+            smtp,
+            receiver: receiver.trim(),
+            count: receivers.length,
+            messages: body.messages,
+            config,
+        })
+    ));
 
     return { status: 'ok' };
 })
