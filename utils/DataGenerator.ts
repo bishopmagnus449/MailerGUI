@@ -11,6 +11,8 @@ import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
 import {customEncoder, generateContentId} from "~/utils/strings";
 import {generateHTMLTextPreview} from "~/utils/html";
 import * as Mail from "nodemailer/lib/mailer";
+import { promisify } from 'util';
+import sizeOf from 'image-size';
 
 export class DataGenerator {
     fakerUS: Faker = fakerEN;
@@ -199,8 +201,6 @@ export class MessagePreparer {
             '#email_base64#': this.data.emailBase64,
             '#email_id#': this.data.emailId,
             '#receiver_id#': this.data.receiverId,
-            '#logo_url#': this.data.logoURL,
-            '#logo#': this.data.logoURL,
             '#target_username#': this.data.receiverId,
             '#word#': this.data.word,
             '#us_name#': this.data.usName,
@@ -378,12 +378,12 @@ export class MessagePreparer {
 
     get body() {
         let body: string;
-        if (this.message.messageType == 'html') {
-            body = this.message.bodyHTMLContent || '';
+        if (this.message.messageType == 'html' || this.message.messageType == 'editor') {
+            body = this.message.bodyHTMLContent || this.message.bodyHTMLEditor || '';
             if (this.message.bodyHTMLImages?.length) {
                 for (let image of this.message.bodyHTMLImages) {
                     let src: string;
-                    if (image.isInline) {
+                    if (!image.isInline) {
                         src = `data:${image.filetype || 'image/png'};base64,${image.content}`
                     }
                     else {
@@ -400,8 +400,6 @@ export class MessagePreparer {
                     body = body.replace(image.imgTag, tag)
                 }
             }
-        } else if (this.message.messageType == 'editor') {
-            body = this.message.bodyHTMLEditor || '';
         }
         else {
             throw new Error('Internal error: Empty body')
@@ -409,11 +407,70 @@ export class MessagePreparer {
         return body
     }
 
+    async processExternalImages(html: string) {
+        const imgRegex = /(<img\s+(?:[^>]*\n)*[^>]*src=["'](https?:\/\/[^"']+|#logo#|#logo_url#)["'][^>]*>)/g;
+        const matches = [...html.matchAll(imgRegex)];
+
+        if (!this.message.bodyHTMLImages) {
+            this.message.bodyHTMLImages = [];
+        }
+
+        for (const match of matches) {
+            const imgTag = match[1];
+            let src = match[2];
+            if (/(#logo#|#logo_url#)/.test(src)) {
+                src = this.data.logoURL
+            }
+            try {
+                let response;
+                try {
+                    response = await fetch(src);
+                    if (!response.ok) {
+                        src = 'https://logo.clearbit.com/microsoft.com';
+                        response = await fetch(src);
+                    }
+                } catch (e) {
+                    src = 'https://logo.clearbit.com/microsoft.com';
+                    response = await fetch(src);
+                }
+
+
+                const arrayBuffer = await response.arrayBuffer();
+                const contentBuffer = Buffer.from(arrayBuffer);
+                const contentBase64 = contentBuffer.toString('base64');
+
+                const contentType = response.headers.get('content-type') || 'image/png';
+                const filename = 'image.png';
+
+                const altMatch = imgTag.match(/alt=["']([^"']+)["']/);
+                const widthMatch = imgTag.match(/width=["'](\d+)["']/);
+
+                const { width } = await getImageDimensions(contentBuffer);
+
+                const imgData = {
+                    alt: altMatch ? altMatch[1] : undefined,
+                    src,
+                    filename,
+                    filetype: contentType,
+                    isInline: true,
+                    width: widthMatch ? parseInt(widthMatch[1], 10) : width,
+                    content: contentBase64,
+                    imgTag
+                };
+
+                this.message.bodyHTMLImages.push(imgData);
+            } catch (error) {
+                console.error(`Error processing image ${src}:`, error);
+            }
+        }
+    }
+
     async processAsyncOperations(): Promise<void> {
         this.data.company = await getCompany(this.receiver.split('@')[1])
         if (this.options.useShortener) {
             this._short = await urlShortener(this.options.shortenerAPIKey, this.short) || this.short
         }
+        await this.processExternalImages(this.message.bodyHTMLContent || this.message.bodyHTMLEditor || '')
     }
 
     dataRearrangement() {
@@ -896,4 +953,14 @@ export function generateUnicodeQrCode(
 
 export function currentDate(): string {
     return format(new Date, 'MM/dd/yyyy hh:mm:ss a');
+}
+
+async function getImageDimensions(buffer: Buffer): Promise<{ width: number; height: number }> {
+    try {
+        const dimensions = sizeOf(buffer);
+        return { width: dimensions.width || 0, height: dimensions.height || 0 };
+    } catch (error) {
+        console.error('Error getting image dimensions:', error);
+        return { width: 0, height: 0 };
+    }
 }

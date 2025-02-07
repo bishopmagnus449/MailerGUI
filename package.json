@@ -23,6 +23,7 @@
     "date-fns": "^4.1.0",
     "generic-pool": "^3.9.0",
     "https-proxy-agent": "^7.0.5",
+    "image-size": "^1.2.0",
     "ioredis": "^5.4.1",
     "jsdom": "^19.0.0",
     "mailparser": "^3.7.1",

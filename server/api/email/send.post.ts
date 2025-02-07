@@ -12,16 +12,20 @@ export default defineEventHandler(async (event) => {
     await queue.queue.drain();
 
     logger.sendLog({type: 'reset'})
-
-    await Promise.all(receivers.map((receiver: string) =>
-        queue.queue.add('', {
+    const jobList = receivers.map((receiver: string) => ({
+        name: 'SendProcess',
+        data: {
             smtp,
             receiver: receiver.trim(),
             count: receivers.length,
             messages: body.messages,
             config,
-        })
-    ));
+        },
+    }));
+
+    for (let i = 0; i < jobList.length; i += 500) {
+        await queue.queue.addBulk(jobList.slice(i, i + 500));
+    }
 
     return { status: 'ok' };
 })

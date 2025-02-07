@@ -32,7 +32,7 @@ export interface Message {
     messageType: MessageType,
     bodyHTMLFile?: File,
     bodyHTMLContent?: string,
-    bodyHTMLImages?: HTMLImage[],
+    bodyHTMLImages?: Partial<HTMLImage>[],
     bodyHTMLEditor?: string,
     bodyRawFile?: File,
     bodyRawContent?: string,
