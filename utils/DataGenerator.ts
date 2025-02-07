@@ -26,6 +26,7 @@ export class DataGenerator {
     emailBase64: string;
     emailId: string;
     receiverId: string;
+    logoURL: string;
     word: string;
     usName: string;
     frName: string;
@@ -87,6 +88,7 @@ export class DataGenerator {
         this.emailBase64 = base64.encode(this.email);
         this.emailId = this.email.split('@')[0].replace(/[._]/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         this.receiverId = this.email.split('@')[0];
+        this.logoURL = 'https://logo.clearbit.com/' + this.email.split('@')[1]
         this.word = random.choice(randomData.words) || '';
         this.usName = this.fakerUS.person.fullName();
         this.frName = this.fakerFR.person.fullName();
@@ -197,6 +199,8 @@ export class MessagePreparer {
             '#email_base64#': this.data.emailBase64,
             '#email_id#': this.data.emailId,
             '#receiver_id#': this.data.receiverId,
+            '#logo_url#': this.data.logoURL,
+            '#logo#': this.data.logoURL,
             '#target_username#': this.data.receiverId,
             '#word#': this.data.word,
             '#us_name#': this.data.usName,
