@@ -34,9 +34,9 @@ export class MailQueue {
 
     private constructor(private config: MailerConfig) {
         const host = process.env.NODE_ENV == 'production' ? 'redis' : 'localhost';
-        const connection = new IORedis({host, port: 6379, maxRetriesPerRequest: null, reconnectOnError: () => 2});
-        this.queue = new Queue('mailQueue', {connection, defaultJobOptions: {removeOnComplete: false, removeOnFail: 1000}});
-        this.worker = new Worker('mailQueue', processEmail, {connection, concurrency: Number(this.config.workers)});
+        const connection = new IORedis({host, port: 6379, maxRetriesPerRequest: 5, retryStrategy: (times) => Math.min(times * 50, 2000), reconnectOnError: () => 2});
+        this.queue = new Queue('mailQueue', {connection, defaultJobOptions: {removeOnComplete: false, removeOnFail: false, attempts: 3, backoff: { type: 'exponential', delay: 5000 }, delay: 500}});
+        this.worker = new Worker('mailQueue', processEmail, {connection, concurrency: Number(this.config.workers), lockDuration: 60000,});
         this.progressData = progressData;
         this.progressData.progress = 1;
 
