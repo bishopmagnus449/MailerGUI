@@ -18,6 +18,12 @@ if ! command -v docker >/dev/null 2>&1; then
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
+if ! sysctl -n vm.overcommit_memory | grep -q '1'; then
+  sudo sysctl vm.overcommit_memory=1
+  echo "vm.overcommit_memory=1" | sudo tee -a /etc/sysctl.conf
+  sudo sysctl -p
+fi
+
 if [ -d "MailerGUI" ]; then
   cd MailerGUI || exit 1
   git pull
