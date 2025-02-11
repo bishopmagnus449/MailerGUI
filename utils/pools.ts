@@ -2,7 +2,7 @@ import nodemailer, {type Transporter} from "nodemailer";
 import GenericPool from "generic-pool";
 import {SMTPConfig, MailerConfig} from "~/src/types/types";
 import {WebSocketLogger} from "~/utils/WebSocketLogger";
-import {deepEqual} from "~/utils/arrays";
+import {deepEqual, getRandomMember} from "~/utils/arrays";
 
 const logger = WebSocketLogger.getInstance();
 
@@ -25,7 +25,8 @@ export class SMTPTransporterPool {
             logger.sendLog({type: 'warning', message: 'Initializing SMTP pool'});
             let proxy = undefined;
             if (globalConfig.proxy.useProxy) {
-                proxy = `${globalConfig.proxy.protocol}//${globalConfig.proxy.host}:${globalConfig.proxy.port}`
+                const proxyStr = getRandomMember(globalConfig.proxy.list)
+                proxy = `${globalConfig.proxy.protocol}://${proxyStr}`
             }
 
             this.pool = GenericPool.createPool({

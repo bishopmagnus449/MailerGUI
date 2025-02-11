@@ -16,12 +16,12 @@ export function moveItem(array: any[], fromIndex: number|any, toIndex: number|an
     array.splice(toIndex, 0, element);
 }
 
-export function getRandomMember(arr: any[]) {
+export function getRandomMember<T>(arr: T[]): T {
     if (!Array.isArray(arr) || arr.length === 0) {
         throw new Error('Input must be a non-empty array.');
     }
-    const randomIndex = Math.floor(Math.random() * arr.length);
-    return arr[randomIndex];
+
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
 export function shuffle(array: any[]): void {
