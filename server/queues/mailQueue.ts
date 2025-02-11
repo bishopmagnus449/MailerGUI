@@ -105,7 +105,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
     logger.sendLog({type: 'log', message: 'Sending to: ' + receiver});
     const transporterPool = SMTPTransporterPool.getInstance(smtp, config);
     const transporter = await transporterPool.acquire();
-    const queueInfo = await getQueueInfo(MailQueue.getInstance());
+
 
     try {
         for (let message of messages) {
@@ -148,7 +148,12 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
         console.error('Error: ' + receiver);
         console.error(e);
     } finally {
-        logger.sendLog({type: 'progress', message: Math.floor(progressData.progress / progressData.count * 100), options: queueInfo});
+        const queueInfo = await getQueueInfo(MailQueue.getInstance());
+        logger.sendLog({
+            type: 'progress',
+            message: Math.floor(progressData.progress / progressData.count * 100),
+            options: {...queueInfo, elapsedTime: getElapsedTime(), estimated: getEstimatedTime()}
+        });
         progressData.progress++;
         await transporterPool.release(transporter);
     }
