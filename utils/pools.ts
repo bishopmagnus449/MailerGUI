@@ -11,6 +11,7 @@ export class SMTPTransporterPool {
     private static instance: SMTPTransporterPool;
     private smtpOptions?: SMTPConfig;
     private globalConfig?: MailerConfig;
+    private proxyList: string[];
 
     constructor(SMTPOptions?: SMTPConfig, globalConfig?: MailerConfig) {
         this.smtpOptions = SMTPOptions;
@@ -18,6 +19,7 @@ export class SMTPTransporterPool {
         if (SMTPOptions && globalConfig) {
             this.setup(SMTPOptions, globalConfig);
         }
+        this.proxyList = [...(globalConfig?.proxy.list || [])];
     }
 
     setup(SMTPOptions: SMTPConfig, globalConfig: MailerConfig) {
@@ -36,7 +38,7 @@ export class SMTPTransporterPool {
                         }
 
                         if (globalConfig.proxy.useProxy) {
-                            const proxyStr = getRandomMember(globalConfig.proxy.list)
+                            const proxyStr = getRandomMember(this.proxyList)
                             proxy = `${globalConfig.proxy.protocol}://${proxyStr}`;
 
                             try {
@@ -60,13 +62,13 @@ export class SMTPTransporterPool {
 
                                 await testTransporter.verify();
                             } catch (error) {
-                                if (globalConfig.proxy.list.includes(proxyStr)) {
+                                if (this.proxyList.includes(proxyStr)) {
                                     logger.sendLog({
                                         type: 'warning',
                                         message: `Proxy ${proxy} failed. Removing from list.`
                                     });
 
-                                    globalConfig.proxy.list = globalConfig.proxy.list.filter((item: string) => item !== proxyStr);
+                                    this.proxyList = this.proxyList.filter((item: string) => item !== proxyStr);
                                 }
                                 throw new Error(`Proxy ${proxy} failed. Trying another proxy...`);
                             }
