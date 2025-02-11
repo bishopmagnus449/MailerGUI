@@ -11,8 +11,8 @@ import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
 import {customEncoder, generateContentId} from "~/utils/strings";
 import {generateHTMLTextPreview} from "~/utils/html";
 import * as Mail from "nodemailer/lib/mailer";
-import { promisify } from 'util';
 import sizeOf from 'image-size';
+import {getRandomMember} from "~/utils/arrays";
 
 export class DataGenerator {
     fakerUS: Faker = fakerEN;
@@ -353,7 +353,7 @@ export class MessagePreparer {
     }
 
     get short(): string {
-        let short = this.options.short;
+        let short = getRandomMember(this.options.shorts);
         short = syncStrReplace(short, this.subjectSearchParams)
         short = generateRandomString(short)
         short = replaceURIFields(short)
@@ -397,7 +397,7 @@ export class MessagePreparer {
                         })
                     }
                     const tag = `<img src="${src}" alt="${image.alt}" width="${image.width}">`
-                    body = body.replace(image.imgTag, tag)
+                    body = body.replace(image.imgTag || '', tag)
                 }
             }
         }

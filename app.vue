@@ -1,6 +1,7 @@
 <template>
   <NuxtRouteAnnouncer/>
   <div class="container is-flex-grow-1 m-3 p-3 is-flex">
+    <span v-if="debugMode" class="is-family-code is-info tag" style="position: absolute;z-index: 10;">DEBUG MODE</span>
     <b-steps ref="stepsContainer" v-model="activeStep" mobile-mode="compact"
              class="is-flex is-flex-direction-column is-flex-grow-1 is-relative">
       <b-step-item label="Config"
@@ -20,7 +21,8 @@
 
           <b-field label="Short Configuration" expanded>
             <b-field expanded label="Short URL" label-position="on-border" grouped>
-              <b-input expanded type="url" v-model="globalConfig.short" required />
+              <b-taginput v-model="globalConfig.shorts" style="overflow-y: auto; overflow-x: hidden; max-height: 100px; max-width: 47vw;"
+                          :before-adding="validateUrl" expanded :on-paste-separators="[',', '\r\n', '\n', ' ']" />
               <b-switch left-label v-model="globalConfig.useShortener" >Use Shortener</b-switch>
             </b-field>
 
@@ -71,8 +73,13 @@
                   <option value="socks5">Socks</option>
                 </b-select>
 
-                <b-input v-model="globalConfig.proxy.host" placeholder="Host" :required="globalConfig.proxy.useProxy" expanded />
-                <b-input v-model="globalConfig.proxy.port" placeholder="Port" :required="globalConfig.proxy.useProxy" class="port-field" type="number" />
+                <b-field expanded message="e.g. user:pass@host:port or host:port">
+                  <b-taginput v-model="globalConfig.proxy.list" style="overflow-y: auto; overflow-x: hidden; max-height: 100px; max-width: 59vw;"
+                              placeholder="Enter [user:pass@]host:port proxy" expanded
+                              :on-paste-separators="[',', '\r\n', '\n', ' ']"
+                              :before-adding="validateProxy"
+                  />
+                </b-field>
               </b-field>
             </b-collapse>
           </b-field>
@@ -321,6 +328,7 @@ export default {
   data() {
     return {
       isDraggingConfigSelect: false,
+      debugMode: false,
 
       activeStep: 'config' as Step,
       receiversFile: null as File | null,
@@ -342,7 +350,7 @@ export default {
         },
       ],
       globalConfig: {
-        short: '',
+        shorts: [] as string[],
         workers: 10,
         useShortener: false,
         shortenerAPIKey: '',
@@ -354,6 +362,8 @@ export default {
         },
         proxy: {
           useProxy: false,
+          list: [] as string[],
+          protocol: 'http',
         },
         headers: {
           useHeaders: false,
@@ -368,7 +378,20 @@ export default {
   },
   methods: {
     log: (a: any) => console.log(a),
-
+    validateProxy(tag: string) {
+      return /^(.+:.+@)?([a-zA-Z0-9.-]+):(\d+)$/.test(tag);
+    },
+    validateUrl(url: string) {
+      try {
+        if (!url.startsWith('http')) {
+          url = 'http://' + url
+        }
+        new URL(url);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    },
     async startProcess(next: any) {
       next.action()
       await fetch('/api/email/send', {
@@ -385,6 +408,7 @@ export default {
 
     async checkQueues() {
       const data = await $fetch('/api/email/ping');
+      this.debugMode = data.debugMode;
       if (data.queueRunning) {
         if (this.activeStep !== 'progress' && data.remainingCount > 0) {
           this.$buefy.toast.open({message: 'Another sending process is running...'});
@@ -642,7 +666,7 @@ export default {
 
     isConfigDone() {
       let condition: boolean = true;
-      if (!this.globalConfig.short.match(/^https?:\/\/(www\.)?([a-zA-Z0-9\-_]+\.[a-zA-Z]{2,})(\/\S*)?/)) {
+      if (!this.globalConfig.shorts.length) {
         condition = false;
       }
       if (condition) {}
@@ -729,10 +753,6 @@ body div#__nuxt {
   z-index: 10000;
 }
 
-.port-field {
-  width: 120px;
-}
-
 .container {
   border-radius: 4px;
   box-shadow: 0 0 35px 0 rgb(0 0 0 / 25%);
@@ -749,7 +769,7 @@ body div#__nuxt {
 }
 
 .step-content {
-  overflow: hidden;
+  overflow: hidden auto!important;
   flex: 1 auto;
 
   .step-item {

@@ -23,6 +23,8 @@ const {data} = useWebSocket(`ws://${location.host}/api/websocket`, {
   }})
 const progress = ref<number>(undefined);
 const remaining = ref<number>(undefined);
+const estimated = ref<string>('');
+const elapsed = ref<string>('');
 
 
 watch(data, async (newValue: string) => {
@@ -30,6 +32,8 @@ watch(data, async (newValue: string) => {
   if (log.type == 'progress') {
     progress.value = log.message;
     remaining.value = log.options ? Math.max(log.options.remainingCount - 1, 0) : 0;
+    estimated.value = log.options?.estimated;
+    elapsed.value = log.options?.elapsedTime;
     if (progress.value == '100') {
       remaining.value = 0;
     }
@@ -55,7 +59,11 @@ watch(data, async (newValue: string) => {
     <div class="logger mb-2 is-flex-grow-1 has-background-black has-text-white is-family-monospace px-5 py-3">
       <p :class="`has-text-${log.type}`" :key="index" v-for="(log, index) in history"><span class="has-text-white user-select-none">> </span>{{ log.message }}</p>
     </div>
-    <b-progress type="is-primary" :value="progress"  show-value format="percent">{{ !progress ? '' : `${progress}% | Remaining: ${remaining}`}}</b-progress>
+    <b-progress type="is-primary" :value="progress"  show-value format="percent">{{ typeof progress !== "number" ? '' : `${progress}% | Remaining: ${remaining}`}}</b-progress>
+    <div class="is-flex">
+      <p v-if="elapsed" class="is-capitalized has-text-dark has-text-weight-bold user-select-none mr-2">Elapsed: <span class="has-text-grey has-text-weight-normal">{{elapsed}}</span></p>
+      <p v-if="estimated" class="is-capitalized has-text-dark has-text-weight-bold user-select-none">Estimated: <span class="has-text-grey has-text-weight-normal">{{estimated}}</span></p>
+    </div>
   </div>
 
 </template>

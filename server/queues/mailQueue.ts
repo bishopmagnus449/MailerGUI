@@ -11,7 +11,8 @@ const logger = WebSocketLogger.getInstance();
 
 const progressData = {
     progress: 0,
-    count: 0
+    count: 0,
+    startTimestamp: Date.now(),
 };
 
 const getQueueInfo = async (instance: MailQueue) => {
@@ -30,15 +31,16 @@ export class MailQueue {
     public queue: Queue;
     public worker: Worker;
     private static instance: MailQueue;
-    private progressData: { count: number; progress: number };
+    private progressData: { count: number; progress: number, startTimestamp: number };
 
     private constructor(private config: MailerConfig) {
         const host = process.env.NODE_ENV == 'production' ? 'redis' : 'localhost';
-        const connection = new IORedis({host, port: 6379, maxRetriesPerRequest: 5, retryStrategy: (times) => Math.min(times * 50, 2000), reconnectOnError: () => 2});
-        this.queue = new Queue('mailQueue', {connection, defaultJobOptions: {removeOnComplete: false, removeOnFail: false, attempts: 3, backoff: { type: 'exponential', delay: 5000 }, delay: 500}});
-        this.worker = new Worker('mailQueue', processEmail, {connection, concurrency: Number(this.config.workers), lockDuration: 60000,});
+        const connection = new IORedis({host, port: 6379, maxRetriesPerRequest: null, retryStrategy: (times) => Math.min(times * 50, 2000), reconnectOnError: () => 2});
+        this.queue = new Queue('mailQueue', {connection, defaultJobOptions: {removeOnComplete: false, removeOnFail: false, attempts: 3}});
+        this.worker = new Worker('mailQueue', String(process.env.DEBUG_MODE) === 'true' ? testProcess : processEmail, {connection, concurrency: Number(this.config.workers), lockDuration: 60000,});
         this.progressData = progressData;
         this.progressData.progress = 1;
+        this.progressData.startTimestamp = Date.now();
 
         logger.sendLog({type: 'progress', message: this.progressData.progress})
 
@@ -76,6 +78,24 @@ export class MailQueue {
         return this.instance;
     }
 
+}
+async function testProcess(job: Job<{smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig, count: number}>) {
+    const {smtp, receiver, messages, config} = job.data;
+
+    progressData.count = job.data.count;
+
+    logger.sendLog({type: 'log', message: 'Sending to: ' + receiver});
+
+    await ((ms) => new Promise(resolve => setTimeout(resolve, ms)))(Math.floor(Math.random() * (3000 - 500 + 1)) + 3000)
+
+    logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
+    console.info([progressData.progress], 'Sent: ' + receiver);
+    const queueInfo = await getQueueInfo(MailQueue.getInstance());
+    logger.sendLog({
+        type: 'progress',
+        message: Math.floor(progressData.progress / progressData.count * 100),
+        options: {...queueInfo, elapsedTime: getElapsedTime(), estimated: getEstimatedTime()}
+    });    progressData.progress++;
 }
 
 async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig, count: number}>)  {
@@ -133,3 +153,36 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
         await transporterPool.release(transporter);
     }
 }
+
+const formatTime = (milliseconds: number) => {
+    const years = Math.floor(milliseconds / (365.25 * 24 * 60 * 60 * 1000));
+    const months = Math.floor((milliseconds % (365.25 * 24 * 60 * 60 * 1000)) / (30 * 24 * 60 * 60 * 1000));
+    const days = Math.floor((milliseconds % (30 * 24 * 60 * 60 * 1000)) / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((milliseconds % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const minutes = Math.floor((milliseconds % (60 * 60 * 1000)) / (60 * 1000));
+    const seconds = Math.floor((milliseconds % (60 * 1000)) / 1000);
+
+    const timeComponents = [];
+    if (years > 0) timeComponents.push(`${years} year(s)`);
+    if (months > 0) timeComponents.push(`${months} month(s)`);
+    if (days > 0) timeComponents.push(`${days} day(s)`);
+    if (hours > 0) timeComponents.push(`${hours} hour(s)`);
+    if (minutes > 0) timeComponents.push(`${minutes} minute(s)`);
+    if (seconds > 0) timeComponents.push(`${seconds} second(s)`);
+
+    return timeComponents.join(' ');
+};
+
+const getElapsedTime = () => {
+    const elapsedTime = Date.now() - progressData.startTimestamp;
+    return formatTime(elapsedTime);
+};
+
+const getEstimatedTime = () => {
+    if (!progressData.progress || progressData.progress === 0) return "N/A";
+    const totalTimeElapsed = Date.now() - progressData.startTimestamp;
+    const timePerJob = totalTimeElapsed / progressData.progress;
+    const estimatedTotalTime = timePerJob * progressData.count;
+    const estimatedTimeRemaining = estimatedTotalTime - totalTimeElapsed;
+    return formatTime(estimatedTimeRemaining);
+};

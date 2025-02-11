@@ -50,7 +50,7 @@ export interface SMTPConfig {
 
 type ProxyProtocol = 'http' | 'socks5'
 export interface MailerConfig {
-    short: string,
+    shorts: string[],
     workers: number,
     useShortener: boolean,
     shortenerAPIKey: string,
@@ -63,8 +63,7 @@ export interface MailerConfig {
     proxy: {
         useProxy: boolean,
         protocol: ProxyProtocol,
-        host: string,
-        port: number,
+        list: string[]
     },
     headers: {
         useHeaders: boolean,
