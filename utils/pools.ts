@@ -23,14 +23,14 @@ export class SMTPTransporterPool {
         if (!this.pool) {
             console.info('Initializing SMTP pool');
             logger.sendLog({type: 'warning', message: 'Initializing SMTP pool'});
-            let proxy = undefined;
-            if (globalConfig.proxy.useProxy) {
-                const proxyStr = getRandomMember(globalConfig.proxy.list)
-                proxy = `${globalConfig.proxy.protocol}://${proxyStr}`
-            }
 
             this.pool = GenericPool.createPool({
                     create: async () => {
+                        let proxy = undefined;
+                        if (globalConfig.proxy.useProxy) {
+                            const proxyStr = getRandomMember(globalConfig.proxy.list)
+                            proxy = `${globalConfig.proxy.protocol}://${proxyStr}`
+                        }
                         console.info("Creating SMTP transport");
                         logger.sendLog({type: 'warning', message: 'Creating SMTP transport'});
                         try {
