@@ -48,6 +48,10 @@ export class SMTPTransporterPool {
                                         secure: SMTPOptions.port == 465,
                                         proxy, ...SMTPOptions,
                                         // @ts-ignore
+                                        connectionTimeout: 3000,
+                                        // @ts-ignore
+                                        socketTimeout: 4000,
+                                        // @ts-ignore
                                         tls: {rejectUnauthorized: false, checkServerIdentity: () => null}});
 
                                 if (globalConfig.proxy.useProxy && globalConfig.proxy.protocol == 'socks5') {
