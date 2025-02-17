@@ -304,6 +304,7 @@ export class MessagePreparer {
             'Message-ID': `<${Date.now().toString(26)}-${Date.now().toString(36)}.${this.data.receiverId}@${this.data.domainReceiver}>`,
             // 'X-Recipient': this.receiver,
             // 'X-Tracking-ID': trackingId,
+            'X-PM-Message-Stream:' 'outbound',
             'X-Mailer': 'Sendinblue',
             'X-Mailin-Campaign': campaignId.toString(),
             'X-Mailin-Client': clientId.toString(),
