@@ -760,7 +760,9 @@ body div#__nuxt {
   background-color: rgb(255 255 255 / 80%);
 }
 
-
+.cursor-pointer {
+  cursor: pointer;
+}
 
 .steps-navigations {
   position: absolute;
