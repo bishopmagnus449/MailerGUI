@@ -324,7 +324,9 @@ export class MessagePreparer {
         return subject
     }
 
-    async text(): Promise<string> {
+    async text(): Promise<string|undefined> {
+        if (!this.message.useTextAlt) return;
+
         let body = this.message.text || generateHTMLTextPreview(this.body)
         body = await strReplace(body, this.bodySearchParams)
         body = generateRandomString(body)

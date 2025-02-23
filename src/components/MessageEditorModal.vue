@@ -559,8 +559,16 @@ export default defineComponent({
           <b-input v-model="currentMessage.subject" required/>
         </b-field>
 
-        <b-field label="Text Alternative">
-          <b-input type="textarea" v-model="currentMessage.text" placeholder="It will be generated automatically, you can input your text instead..."/>
+        <b-field>
+          <template #label>
+            <div class="is-flex is-flex-grow-1 is-justify-content-space-between cursor-pointer" :class="{'has-text-grey': !currentMessage.useTextAlt}">
+              Text Alternative
+              <b-switch v-model="currentMessage.useTextAlt"></b-switch>
+            </div>
+          </template>
+          <b-collapse animation="slide" v-model="currentMessage.useTextAlt">
+            <b-input type="textarea" v-model="currentMessage.text" placeholder="It will be generated automatically, you can input your text instead..."/>
+          </b-collapse>
         </b-field>
 
         <b-field v-if="currentMessage.messageType !== 'raw'" label="Attachments" expanded>
