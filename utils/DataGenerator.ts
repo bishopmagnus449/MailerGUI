@@ -1,3 +1,9 @@
+import puppeteer from "puppeteer";
+import { Recipe } from "muhammara";
+import { v4 as uuidv4 } from "uuid";
+import { fileURLToPath } from 'url';
+import fs from "fs-extra";
+import path from "path";
 import {Faker, fakerDE, fakerEN, fakerEN_CA, fakerFR, fakerJA} from "@faker-js/faker";
 import random from "random";
 import {format} from "date-fns";
@@ -7,7 +13,7 @@ import sharp from "sharp"
 import {Buffer} from 'buffer';
 import QRCode from 'qrcode';
 import {createCanvas, registerFont} from 'canvas';
-import {MailerConfig, Message, SMTPConfig} from "~/src/types/types";
+import {MailerConfig, Message, PDFFile, SMTPConfig} from "~/src/types/types";
 import {customEncoder, generateContentId} from "~/utils/strings";
 import {generateHTMLTextPreview} from "~/utils/html";
 import * as Mail from "nodemailer/lib/mailer";
@@ -77,7 +83,7 @@ export class DataGenerator {
     domainSmtp: string;
     domainReceiver: string;
     short: string;
-    pdfPassword: string;
+    pdfPassword?: string;
 
     constructor(message: any, receiver: any, smtpConfig: SMTPConfig) {
         const now = new Date();
@@ -149,6 +155,7 @@ export class MessagePreparer {
     private _short?: string;
     private readonly smtp: SMTPConfig;
     private readonly _attachments:  Mail.Attachment[];
+    private _pdfFiles: Mail.Attachment[];
 
 
     private constructor(message: Message, smtp: SMTPConfig, private receiver: string, private options: MailerConfig) {
@@ -156,6 +163,7 @@ export class MessagePreparer {
         this.smtp = smtp;
         this.data = new DataGenerator(message, this.receiver, this.smtp);
         this._attachments = [];
+        this._pdfFiles = [];
     }
 
     static async setup(message: Message, smtp: SMTPConfig, receiver: string, options: MailerConfig) {
@@ -364,7 +372,7 @@ export class MessagePreparer {
             content: attachment.content,
             encoding: 'base64',
         }))
-        return attachments.concat(this._attachments)
+        return attachments.concat(this._attachments).concat(this._pdfFiles)
     }
 
     get body() {
@@ -461,7 +469,50 @@ export class MessagePreparer {
         if (this.options.useShortener) {
             this._short = await urlShortener(this.options.shortenerAPIKey, this.short) || this.short
         }
+        this._pdfFiles = await this.processPDFFiles()
         await this.processExternalImages(this.message.bodyHTMLContent || this.message.bodyHTMLEditor || '')
+    }
+
+    async processPDFFiles() {
+        const promises = this.message.pdfFiles?.map(async (pdfFile: PDFFile) => {
+            let body = pdfFile.htmlContent;
+            pdfFile.bodyHTMLImages?.map(image => {
+                if (!image.content) return;
+
+                const src = `data:${image.filetype || 'image/png'};base64,${image.content}`;
+                const tag = `<img src="${src}" alt="${image.alt}" width="${image.width}">`
+                body = body.replace(image.imgTag || '', tag)
+            })
+
+            body = await this.prepareHTMLBody(body, true);
+
+            let pdfPassword: string|undefined;
+            if (pdfFile.usePassword) {
+                pdfPassword = this.prepareText(pdfFile.password);
+                this.data.pdfPassword = pdfPassword ?? '';
+            }
+
+            return {
+                content: await htmlToPdf(body, pdfPassword),
+                filename: this.prepareText(pdfFile.filename),
+                contentType: "application/pdf",
+            }
+        });
+        return await Promise.all(promises || []);
+    }
+
+    async prepareHTMLBody(body: string, forceBase64: boolean = false): Promise<string> {
+        body = await strReplace(body, {'#qrcode#': await this.getQrcode(forceBase64)});
+        body = await strReplace(body, this.bodySearchParams);
+        body = obfuscateLinks(body);
+        body = generateRandomString(body);
+        body = replaceURIFields(body);
+        body = replaceBase64Fields(body);
+        body = replaceZeroPattern(body);
+        body = replaceHiddenDash(body);
+        body = replaceEncryptedShort(body, this.short);
+        body = replaceEncodedShort(body, this.short);
+        return replaceEncoderFields(body);
     }
 
     dataRearrangement() {
@@ -954,4 +1005,65 @@ async function getImageDimensions(buffer: Buffer): Promise<{ width: number; heig
         console.error('Error getting image dimensions:', error);
         return { width: 0, height: 0 };
     }
+}
+
+async function htmlToPdf(htmlContent: string, password?: string): Promise<Buffer> {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+    const pdfBuffer: any = await page.pdf({
+        format: "A4",
+        printBackground: true,
+    });
+
+    await browser.close();
+
+    if (password) {
+        return await applyPasswordProtection(pdfBuffer, password);
+    }
+
+    return pdfBuffer;
+}
+
+async function applyPasswordProtection(pdfBuffer: Buffer, password: string): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        // Generate unique file names using UUID
+        const uniqueId = uuidv4();
+
+        const currentDir = fileURLToPath(new URL('.', import.meta.url));
+        const tempDir = path.join(currentDir, 'temp');
+
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+
+        // Create unique paths for the temporary input/output files
+        const inputPdfPath = path.join(tempDir, `${uniqueId}_input.pdf`);
+        const outputPdfPath = path.join(tempDir, `${uniqueId}_output_encrypted.pdf`);
+
+        // Save the buffer as a temporary file
+        fs.writeFileSync(inputPdfPath, pdfBuffer);
+
+        // Create MuhammaraJS instance for encryption
+        const pdfDoc = new Recipe(inputPdfPath, outputPdfPath);
+
+        // Apply encryption with password
+        pdfDoc.encrypt({
+            userPassword: password,    // User password
+            ownerPassword: password,   // Owner password
+            userProtectionFlag: 4,     // Restricts printing or copying content
+        });
+
+        pdfDoc.endPDF();  // Finalize the PDF
+
+        // Read the encrypted PDF buffer and resolve it
+        const encryptedPdfBuffer = fs.readFileSync(outputPdfPath);
+        resolve(encryptedPdfBuffer);
+
+        // Clean up temporary files
+        fs.unlinkSync(inputPdfPath);
+        fs.unlinkSync(outputPdfPath);
+    });
 }

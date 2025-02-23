@@ -23,6 +23,15 @@ export interface Attachment {
     file: File,
 }
 
+export interface PDFFile {
+    filename: string,
+    htmlContent: string,
+    bodyHTMLImages?: Partial<HTMLImage>[],
+    htmlFile?: File,
+    usePassword: boolean,
+    password: string,
+}
+
 type MessageType = 'html' | 'raw' | 'editor';
 
 export interface Message {
@@ -38,6 +47,7 @@ export interface Message {
     bodyRawFile?: File,
     bodyRawContent?: string,
     headers: SendMailOptions,
+    pdfFiles?: PDFFile[],
 }
 
 export interface SMTPConfig {

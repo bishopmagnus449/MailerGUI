@@ -2,7 +2,8 @@
 import {defineComponent} from 'vue'
 import AttachImage from '~/src/components/AttachImageModal.vue'
 import HeadersModal from "~/src/components/HeadersModal.vue";
-import {type Attachment, type HTMLImage, type Message} from "../types/types";
+import PDFFilesModal from "~/src/components/PDFFilesModal.vue";
+import {type Attachment, type HTMLImage, type Message, type PDFFile} from "../types/types";
 import {
   ClassicEditor,
   AccessibilityHelp,
@@ -76,6 +77,7 @@ import {
   Undo,
   type EditorConfig
 } from 'ckeditor5';
+import PDFFileLoaderModal from "./PDFFileLoaderModal.vue";
 
 
 export default defineComponent({
@@ -88,6 +90,7 @@ export default defineComponent({
   mounted() {
     this.currentMessage.messageType = this.currentMessage.messageType || 'html';
     this.currentMessage.headers = this.currentMessage.headers || {};
+    this.currentMessage.pdfFiles = this.currentMessage.pdfFiles || [];
 
     this.editorConfig = {
       toolbar: {
@@ -380,6 +383,19 @@ export default defineComponent({
       oldImage.isInline = newImage.isInline
       oldImage.content = newImage.content
     },
+    editPDFFile(currentPDFFile: PDFFile) {
+      this.$buefy.modal.open({
+        parent: this,
+        component: PDFFileLoaderModal,
+        hasModalCard: true,
+        trapFocus: true,
+        props: {
+          currentPDFFile,
+          currentPDFFiles: this.currentMessage.pdfFiles,
+          isEdited: true,
+        }
+      })
+    },
     onReady(editor: any) {
       // Insert the toolbar before the editable area.
       editor.ui.getEditableElement().parentElement.insertBefore(
@@ -423,7 +439,17 @@ export default defineComponent({
           currentHeaders: this.currentMessage.headers
         },
       })
-
+    },
+    editPDFFiles() {
+      this.$buefy.modal.open({
+        parent: this,
+        component: PDFFilesModal,
+        hasModalCard: true,
+        trapFocus: true,
+        props: {
+          currentPDFFiles: this.currentMessage.pdfFiles
+        },
+      })
     },
 
     checkAttachments() {
@@ -488,6 +514,18 @@ export default defineComponent({
     },
     deleteAttachment(index: number) {
       this.currentMessage.attachments.splice(index, 1);
+    },
+    deletePDFFile(index: number) {
+      this.$buefy.dialog.confirm({
+        message: 'Are you sure to delete the PDF from the list?',
+        onConfirm: () => {
+          this.currentMessage.pdfFiles.splice(index, 1)
+          this.$buefy.snackbar.open('PDF deleted!')
+        },
+        confirmText: 'Delete',
+        type: 'is-danger',
+      })
+
     },
     saveMessage() {
       if (this.isEdited) {
@@ -593,6 +631,12 @@ export default defineComponent({
             <span v-else>[INLINE IMAGE]: {{ file.filename }}</span>
             <button class="delete is-small" type="button" @click="deleteAttachment(index)"></button>
           </li>
+          <li v-for="(pdfFile, index) in currentMessage.pdfFiles" :key="index" class="tag is-info cursor-pointer" >
+            <span @click="editPDFFile(pdfFile)" :title="`Edit ${pdfFile.filename}`">
+              {{ pdfFile.filename }}
+            </span>
+            <button class="delete is-small" type="button" @click="deletePDFFile(index)"></button>
+          </li>
         </ul>
 
         <b-field label="Local Images"
@@ -661,6 +705,7 @@ export default defineComponent({
         </b-field>
 
         <b-field>
+          <b-button label="PDF files" @click.prevent="editPDFFiles"/>
           <b-button label="Headers" @click.prevent="editHeaders"/>
         </b-field>
       </footer>

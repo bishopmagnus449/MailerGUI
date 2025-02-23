@@ -239,6 +239,12 @@
             {{ props.row.attachments.length }}
           </b-table-column>
 
+          <b-table-column field="pdfFiles" label="PDF Files" numeric v-slot="props">
+            {{ props.row.pdfFiles.length }}
+          </b-table-column>
+
+
+
           <b-table-column field="subject" label="Options" v-slot="props">
 
             <b-field>
@@ -599,7 +605,7 @@ export default {
     },
 
     newMessage() {
-      const message = {subject: "", body: "", attachments: [], options: "", messageType: "html"};
+      const message = {subject: "", body: "", attachments: [], options: "", messageType: "html", useTextAlt: false, text: ""};
       this.$buefy.modal.open({
         parent: this,
         component: MessageEditorModal,
