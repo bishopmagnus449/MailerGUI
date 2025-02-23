@@ -425,6 +425,7 @@ export default defineComponent({
       })
 
     },
+
     checkAttachments() {
       this.attachments.forEach((file: File, index: number) => {
         if (file.type == "") {

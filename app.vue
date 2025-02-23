@@ -335,20 +335,6 @@ export default {
       receiversList: [] as string[],
       messages: [] as Message[],
       SMTPConfigs: [] as SMTPConfig[],
-      messagesColumns: [
-        {
-          field: "subject",
-          label: "Subject",
-        },
-        {
-          field: "body",
-          label: "Body",
-        },
-        {
-          field: "attachments",
-          label: "Attachments",
-        },
-      ],
       globalConfig: {
         shorts: [] as string[],
         workers: 10,

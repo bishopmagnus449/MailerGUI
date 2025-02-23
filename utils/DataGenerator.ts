@@ -338,18 +338,7 @@ export class MessagePreparer {
     }
 
     async html(): Promise<string> {
-        let body = this.body
-        body = await strReplace(body, this.bodySearchParams)
-        body = obfuscateLinks(body)
-        body = generateRandomString(body)
-        body = replaceURIFields(body)
-        body = replaceBase64Fields(body)
-        body = replaceZeroPattern(body)
-        body = replaceHiddenDash(body)
-        body = replaceEncryptedShort(body, this.short)
-        body = replaceEncodedShort(body, this.short)
-        body = replaceEncoderFields(body)
-        return body
+        return await this.prepareHTMLBody(this.body)
     }
 
     get short(): string {
@@ -482,12 +471,12 @@ export class MessagePreparer {
         return generateUnicodeQrCode(this.short, options.fontSize, options.foregroundColor, options.backgroundColor);
     }
 
-    private async getQrcode(): Promise<string> {
+    private async getQrcode(forceBase64: boolean=false): Promise<string> {
         const content = await generateQr({
             data: this.short,
-            includeDataAttr: !this.options.inlineQrcode
+            includeDataAttr: forceBase64 || !this.options.inlineQrcode
         })
-        if (this.options.inlineQrcode) {
+        if (this.options.inlineQrcode && !forceBase64) {
             return 'cid:' + this.attachInlineImage({content, contentType:'image/png'})
         } else {
             if (typeof content !== 'string') {

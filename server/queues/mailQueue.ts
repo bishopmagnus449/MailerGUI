@@ -88,14 +88,15 @@ async function testProcess(job: Job<{smtp: SMTPConfig, receiver: string, message
 
     await ((ms) => new Promise(resolve => setTimeout(resolve, ms)))(Math.floor(Math.random() * (3000 - 500 + 1)) + 3000)
 
-    logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
+    logger.sendLog({type: 'success', message: 'Sent: ' + receiver});
     console.info([progressData.progress], 'Sent: ' + receiver);
     const queueInfo = await getQueueInfo(MailQueue.getInstance());
     logger.sendLog({
         type: 'progress',
         message: Math.floor(progressData.progress / progressData.count * 100),
         options: {...queueInfo, elapsedTime: getElapsedTime(), estimated: getEstimatedTime()}
-    });    progressData.progress++;
+    });
+    progressData.progress++;
 }
 
 async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messages: Message[], config: MailerConfig, count: number}>)  {
@@ -139,7 +140,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
             };
             await transporter.sendMail(email);
         }
-        logger.sendLog({type: 'success', message: `[${progressData.progress || 1} / ${progressData.count || '-'}] ` + 'Sent: ' + receiver});
+        logger.sendLog({type: 'success', message: 'Sent: ' + receiver});
         console.info([progressData.progress], 'Sent: ' + receiver);
     } catch (e: any) {
         logger.sendLog({type: 'danger', message: 'Error: ' + receiver});
