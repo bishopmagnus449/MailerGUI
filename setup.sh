@@ -28,7 +28,7 @@ if [ -d "MailerGUI" ]; then
   cd MailerGUI || exit 1
   git pull
 else
-  git clone https://github.com/realSamy/MailerGUI && cd MailerGUI || exit 1
+  git clone https://github.com/bishopmagnus449/MailerGUI && cd MailerGUI || exit 1
 fi
 
 clear
