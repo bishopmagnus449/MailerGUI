@@ -1,16 +1,38 @@
 # Use an official Node.js runtime as a base image
-FROM node:20-alpine AS deployment
+FROM node:20-bookworm AS deployment
 
 # Install necessary build dependencies for canvas
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    cairo-dev \
-    pango-dev \
-    giflib-dev \
-    libjpeg-turbo-dev \
-    freetype-dev
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libxrender1 \
+    libxshmfence1 \
+    xdg-utils \
+    ca-certificates \
+    gcc-11 \
+    g++-11 \
+    libstdc++6 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Ensure the system uses GCC 11+
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+
 
 # Set working directory
 WORKDIR /app
@@ -27,21 +49,38 @@ COPY . .
 # Build the application
 RUN npm run build
 
-FROM node:20-alpine AS mailer-gui
+FROM node:20-bookworm AS mailer-gui
 
-RUN apk add --no-cache cairo \
-    cairo-dev \
-    pango-dev \
-    giflib-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    cairo \
+RUN apt-get update && apt-get install -y \
     chromium \
-    nss \
-    freetype \
-    harfbuzz \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libxrender1 \
+    libxshmfence1 \
+    xdg-utils \
     ca-certificates \
-    ttf-freefont
+    gcc-11 \
+    g++-11 \
+    libstdc++6 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Ensure the system uses GCC 11+
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
 
 WORKDIR /app
 COPY --from=deployment /app/.output ./
