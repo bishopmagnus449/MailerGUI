@@ -370,6 +370,18 @@ export default {
   },
   methods: {
     log: (a: any) => console.log(a),
+    removeFiles(obj: any): any {
+      if (Array.isArray(obj)) {
+        return obj.map(this.removeFiles); // Recursively clean arrays
+      } else if (obj && typeof obj === "object") {
+        return Object.fromEntries(
+            Object.entries(obj)
+                .filter(([_, value]) => !(value instanceof File)) // Remove File objects
+                .map(([key, value]) => [key, this.removeFiles(value)]) // Recursively process objects
+        );
+      }
+      return obj; // Return primitives as is
+    },
     validateProxy(tag: string) {
       return /^(.+:.+@)?([a-zA-Z0-9.-]+):(\d+)$/.test(tag);
     },
@@ -391,7 +403,7 @@ export default {
         body: JSON.stringify({
           smtp_list: this.SMTPConfigs,
           receivers: this.receiversList,
-          messages: this.messages,
+          messages: this.removeFiles(this.messages),
           config: this.globalConfig,
         }),
         headers: {'content-type': 'application/json'},

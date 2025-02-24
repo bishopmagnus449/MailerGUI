@@ -9,6 +9,7 @@ services:
       - NODE_ENV=production
       - NUST_HOST=0.0.0.0
       - NUXT_PORT=3000
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
     depends_on:
       - redis
 
