@@ -1008,7 +1008,10 @@ async function getImageDimensions(buffer: Buffer): Promise<{ width: number; heig
 }
 
 async function htmlToPdf(htmlContent: string, password?: string): Promise<Buffer> {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     const page = await browser.newPage();
 
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });

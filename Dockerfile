@@ -34,7 +34,14 @@ RUN apk add --no-cache cairo \
     pango-dev \
     giflib-dev \
     libjpeg-turbo-dev \
-    freetype-dev
+    freetype-dev \
+    cairo \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
 
 WORKDIR /app
 COPY --from=deployment /app/.output ./
