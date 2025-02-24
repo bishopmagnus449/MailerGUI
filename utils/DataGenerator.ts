@@ -738,7 +738,7 @@ export async function getCompany(domain: string): Promise<string> {
         }
 
     } catch (e) {
-        console.warn('Get company name failed: ', e);
+        console.warn('Get company name failed, email domain will be used instead');
     }
 
     return fallback;
