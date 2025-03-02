@@ -90,6 +90,12 @@
 
           <b-field expanded>
             <b-collapse class="is-flex-grow-1" animation="slide" v-model="globalConfig.headers.useHeaders">
+              <b-field expanded label="Text Encoding" label-position="on-border">
+                <b-select v-model="globalConfig.headers.textEncoding" >
+                  <option class="is-capitalized" v-for="option in ['quoted-printable', 'base64']" :value="option">{{option}}</option>
+                </b-select>
+              </b-field>
+
               <b-field expanded>
                 <b-input v-model="globalConfig.headers.unsubscribe" placeholder="List Unsubscribe e.g. http://example.com/unsubscribe"/>
               </b-field>
@@ -721,6 +727,7 @@ export default {
     });
 
     await this.checkQueues();
+    this.globalConfig.headers.textEncoding = 'quoted-printable';
 
     this.loadBackgroundImage()
   },
