@@ -548,13 +548,14 @@ export default {
           return false;
         }
         let require_login = smtp_info.length > 4;
+        let [address, name] = (smtp_info.at(-1) || '').split('@')
         return {
           'host': smtp_info[0],
           'port': Number(smtp_info[1]),
           'user': require_login ? smtp_info[2] : undefined,
           'pass': require_login ? smtp_info[3] : undefined,
 
-          'from': {address: smtp_info.at(-1)},
+          'from': {address, name},
         }
       }
 
