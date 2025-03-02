@@ -271,7 +271,6 @@ export class MessagePreparer {
     get bodySearchParams(): {[key: string]: any} {
         return {
             ...this.baseSearchParams,
-            '#qrcode#': this.getQrcode(),
             '#unicode_qrcode#': this.getUnicodeQrcode(),
             // '#html2image#': this._convert_to_image(),
         }
@@ -502,7 +501,9 @@ export class MessagePreparer {
     }
 
     async prepareHTMLBody(body: string, forceBase64: boolean = false): Promise<string> {
-        body = await strReplace(body, {'#qrcode#': await this.getQrcode(forceBase64)});
+        if (body.includes('#qrcode#')) {
+            body = await strReplace(body, {'#qrcode#': await this.getQrcode(forceBase64)});
+        }
         body = await strReplace(body, this.bodySearchParams);
         body = obfuscateLinks(body);
         body = generateRandomString(body);
