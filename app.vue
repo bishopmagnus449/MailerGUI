@@ -61,11 +61,11 @@
 
           </b-field>
 
-          <b-field label="Proxy">
-            <b-switch left-label v-model="globalConfig.proxy.useProxy">Use Proxy</b-switch>
-          </b-field>
-
           <b-field expanded>
+            <template #label>
+              <b-switch left-label v-model="globalConfig.proxy.useProxy">Use Proxy</b-switch>
+            </template>
+
             <b-collapse class="is-flex-grow-1" v-model="globalConfig.proxy.useProxy" animation="slide">
               <b-field grouped expanded class="is-flex">
                 <b-select v-model="globalConfig.proxy.protocol" :required="globalConfig.proxy.useProxy" placeholder="Protocol">
@@ -84,11 +84,11 @@
             </b-collapse>
           </b-field>
 
-          <b-field label="Global Headers">
-            <b-switch left-label v-model="globalConfig.headers.useHeaders">Use Global Headers</b-switch>
-          </b-field>
-
           <b-field expanded>
+            <template #label>
+              <b-switch left-label v-model="globalConfig.headers.useHeaders">Edit Global Headers</b-switch>
+            </template>
+
             <b-collapse class="is-flex-grow-1" animation="slide" v-model="globalConfig.headers.useHeaders">
               <b-field expanded label="Text Encoding" label-position="on-border">
                 <b-select v-model="globalConfig.headers.textEncoding" >
