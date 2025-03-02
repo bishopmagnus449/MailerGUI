@@ -1,5 +1,5 @@
 import {SendMailOptions} from 'nodemailer'
-import Mail from "nodemailer/lib/mailer";
+import Mail, {type TextEncoding} from "nodemailer/lib/mailer";
 
 export interface HTMLImage {
     alt?: string,
@@ -78,6 +78,7 @@ export interface MailerConfig {
     },
     headers: {
         useHeaders: boolean,
+        textEncoding: TextEncoding,
         unsubscribe?: string,
         subscribe?: string,
         post?: string,
