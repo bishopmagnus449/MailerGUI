@@ -548,6 +548,7 @@ export class MessagePreparer {
             content,
             contentType,
             encoding: content instanceof Buffer? 'binary' : 'base64',
+            filename: `ii_${cid}.`+ contentType.split('/')[1],
         })
         return cid
     }
