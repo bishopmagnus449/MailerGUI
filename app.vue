@@ -96,6 +96,22 @@
                 </b-select>
               </b-field>
 
+              <b-field expanded label="X-Mailer" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_mailer"/>
+              </b-field>
+
+              <b-field expanded label="X-Mailin-Campaign" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_mailin_campaign"/>
+              </b-field>
+
+              <b-field expanded label="X-Mailin-Client" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_mailin_client"/>
+              </b-field>
+
+              <b-field expanded label="X-Sender" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_sender"/>
+              </b-field>
+
               <b-field expanded>
                 <b-input v-model="globalConfig.headers.unsubscribe" placeholder="List Unsubscribe e.g. http://example.com/unsubscribe"/>
               </b-field>

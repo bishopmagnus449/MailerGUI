@@ -137,7 +137,7 @@ async function processEmail (job: Job<{smtp: SMTPConfig, receiver: string, messa
                 headers: preparer.headers,
                 list: preparer.listHeaders,
                 replyTo: preparer.prepareText(smtp.from),
-                textEncoding: config.headers.textEncoding
+                encoding: config.headers.textEncoding
             };
             await transporter.sendMail(email);
         }

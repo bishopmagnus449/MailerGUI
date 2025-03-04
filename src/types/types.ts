@@ -83,6 +83,10 @@ export interface MailerConfig {
         subscribe?: string,
         post?: string,
         help?: string,
+        x_mailer?: string,
+        x_mailin_campaign?: string,
+        x_mailin_client?: string,
+        x_sender?: string,
     },
 }
 

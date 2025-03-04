@@ -311,10 +311,10 @@ export class MessagePreparer {
             'Message-ID': `<${Date.now().toString(26)}-${Date.now().toString(36)}.${this.data.receiverId}@${this.data.domainReceiver}>`,
             // 'X-Recipient': this.receiver,
             // 'X-Tracking-ID': trackingId,
-            'X-Mailer': 'Sendinblue',
-            'X-Mailin-Campaign': campaignId.toString(),
-            'X-Mailin-Client': clientId.toString(),
-            // 'X-Sender': `no-reply@${this.data.domainSmtp}`,
+            'X-Mailer': this.options.headers.x_mailer ? this.prepareText(this.options.headers.x_mailer) : undefined,
+            'X-Mailin-Campaign': this.options.headers.x_mailin_campaign ? this.prepareText(this.options.headers.x_mailin_campaign) : undefined,
+            'X-Mailin-Client': this.options.headers.x_mailin_client ? this.prepareText(this.options.headers.x_mailin_client) : undefined,
+            'X-Sender': this.options.headers.x_sender ? this.prepareText(this.options.headers.x_sender) : undefined,
             // 'List-Unsubscribe': `<mailto:unsubscribe@${this.data.domainSmtp}?uid=${trackingId}>`,
             ...this.message.headers
         };
