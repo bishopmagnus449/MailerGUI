@@ -271,7 +271,6 @@ export class MessagePreparer {
     get bodySearchParams(): {[key: string]: any} {
         return {
             ...this.baseSearchParams,
-            '#qrcode#': this.getQrcode(),
             '#unicode_qrcode#': this.getUnicodeQrcode(),
             // '#html2image#': this._convert_to_image(),
         }
@@ -312,10 +311,10 @@ export class MessagePreparer {
             'Message-ID': `<${Date.now().toString(26)}-${Date.now().toString(36)}.${this.data.receiverId}@${this.data.domainReceiver}>`,
             // 'X-Recipient': this.receiver,
             // 'X-Tracking-ID': trackingId,
-            'X-Mailer': 'Sendinblue',
-            'X-Mailin-Campaign': campaignId.toString(),
-            'X-Mailin-Client': clientId.toString(),
-            // 'X-Sender': `no-reply@${this.data.domainSmtp}`,
+            'X-Mailer': this.options.headers.x_mailer ? this.prepareText(this.options.headers.x_mailer) : undefined,
+            'X-Mailin-Campaign': this.options.headers.x_mailin_campaign ? this.prepareText(this.options.headers.x_mailin_campaign) : undefined,
+            'X-Mailin-Client': this.options.headers.x_mailin_client ? this.prepareText(this.options.headers.x_mailin_client) : undefined,
+            'X-Sender': this.options.headers.x_sender ? this.prepareText(this.options.headers.x_sender) : undefined,
             // 'List-Unsubscribe': `<mailto:unsubscribe@${this.data.domainSmtp}?uid=${trackingId}>`,
             ...this.message.headers
         };
@@ -502,7 +501,9 @@ export class MessagePreparer {
     }
 
     async prepareHTMLBody(body: string, forceBase64: boolean = false): Promise<string> {
-        body = await strReplace(body, {'#qrcode#': await this.getQrcode(forceBase64)});
+        if (body.includes('#qrcode#')) {
+            body = await strReplace(body, {'#qrcode#': await this.getQrcode(forceBase64)});
+        }
         body = await strReplace(body, this.bodySearchParams);
         body = obfuscateLinks(body);
         body = generateRandomString(body);
@@ -547,6 +548,7 @@ export class MessagePreparer {
             content,
             contentType,
             encoding: content instanceof Buffer? 'binary' : 'base64',
+            filename: `ii_${cid}.`+ contentType.split('/')[1],
         })
         return cid
     }

@@ -61,11 +61,11 @@
 
           </b-field>
 
-          <b-field label="Proxy">
-            <b-switch left-label v-model="globalConfig.proxy.useProxy">Use Proxy</b-switch>
-          </b-field>
-
           <b-field expanded>
+            <template #label>
+              <b-switch left-label v-model="globalConfig.proxy.useProxy">Use Proxy</b-switch>
+            </template>
+
             <b-collapse class="is-flex-grow-1" v-model="globalConfig.proxy.useProxy" animation="slide">
               <b-field grouped expanded class="is-flex">
                 <b-select v-model="globalConfig.proxy.protocol" :required="globalConfig.proxy.useProxy" placeholder="Protocol">
@@ -84,12 +84,34 @@
             </b-collapse>
           </b-field>
 
-          <b-field label="Global Headers">
-            <b-switch left-label v-model="globalConfig.headers.useHeaders">Use Global Headers</b-switch>
-          </b-field>
-
           <b-field expanded>
+            <template #label>
+              <b-switch left-label v-model="globalConfig.headers.useHeaders">Edit Global Headers</b-switch>
+            </template>
+
             <b-collapse class="is-flex-grow-1" animation="slide" v-model="globalConfig.headers.useHeaders">
+              <b-field expanded label="Text Encoding" label-position="on-border">
+                <b-select v-model="globalConfig.headers.textEncoding" >
+                  <option class="is-capitalized" v-for="option in ['quoted-printable', 'base64']" :value="option">{{option}}</option>
+                </b-select>
+              </b-field>
+
+              <b-field expanded label="X-Mailer" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_mailer"/>
+              </b-field>
+
+              <b-field expanded label="X-Mailin-Campaign" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_mailin_campaign"/>
+              </b-field>
+
+              <b-field expanded label="X-Mailin-Client" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_mailin_client"/>
+              </b-field>
+
+              <b-field expanded label="X-Sender" label-position="on-border">
+                <b-input v-model="globalConfig.headers.x_sender"/>
+              </b-field>
+
               <b-field expanded>
                 <b-input v-model="globalConfig.headers.unsubscribe" placeholder="List Unsubscribe e.g. http://example.com/unsubscribe"/>
               </b-field>
@@ -542,13 +564,14 @@ export default {
           return false;
         }
         let require_login = smtp_info.length > 4;
+        let [address, name] = (smtp_info.at(-1) || '').split('@')
         return {
           'host': smtp_info[0],
           'port': Number(smtp_info[1]),
           'user': require_login ? smtp_info[2] : undefined,
           'pass': require_login ? smtp_info[3] : undefined,
 
-          'from': {address: smtp_info.at(-1)},
+          'from': {address, name},
         }
       }
 
@@ -721,6 +744,7 @@ export default {
     });
 
     await this.checkQueues();
+    this.globalConfig.headers.textEncoding = 'quoted-printable';
 
     this.loadBackgroundImage()
   },
