@@ -83,7 +83,7 @@ export class DataGenerator {
     domainSmtp: string;
     domainReceiver: string;
     short: string;
-    pdfPassword?: string;
+    pdfPassword: string;
 
     constructor(message: any, receiver: any, smtpConfig: SMTPConfig) {
         const now = new Date();
@@ -307,15 +307,21 @@ export class MessagePreparer {
         const campaignId = Math.floor(Math.random() * 1000);
         const clientId = Math.floor(Math.random() * 1000000);
 
+        let extraHeaders = {};
+        if (this.options.headers.useHeaders) {
+            extraHeaders = {
+                'X-Mailer': this.options.headers.x_mailer ? this.prepareText(this.options.headers.x_mailer) : undefined,
+                'X-Mailin-Campaign': this.options.headers.x_mailin_campaign ? this.prepareText(this.options.headers.x_mailin_campaign) : undefined,
+                'X-Mailin-Client': this.options.headers.x_mailin_client ? this.prepareText(this.options.headers.x_mailin_client) : undefined,
+                'X-Sender': this.options.headers.x_sender ? this.prepareText(this.options.headers.x_sender) : undefined,
+            }
+        }
         return {
             'Message-ID': `<${Date.now().toString(26)}-${Date.now().toString(36)}.${this.data.receiverId}@${this.data.domainReceiver}>`,
             // 'X-Recipient': this.receiver,
             // 'X-Tracking-ID': trackingId,
-            'X-Mailer': this.options.headers.x_mailer ? this.prepareText(this.options.headers.x_mailer) : undefined,
-            'X-Mailin-Campaign': this.options.headers.x_mailin_campaign ? this.prepareText(this.options.headers.x_mailin_campaign) : undefined,
-            'X-Mailin-Client': this.options.headers.x_mailin_client ? this.prepareText(this.options.headers.x_mailin_client) : undefined,
-            'X-Sender': this.options.headers.x_sender ? this.prepareText(this.options.headers.x_sender) : undefined,
             // 'List-Unsubscribe': `<mailto:unsubscribe@${this.data.domainSmtp}?uid=${trackingId}>`,
+            ...extraHeaders,
             ...this.message.headers
         };
     }
