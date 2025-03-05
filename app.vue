@@ -745,6 +745,10 @@ export default {
 
     await this.checkQueues();
     this.globalConfig.headers.textEncoding = 'quoted-printable';
+    this.globalConfig.headers.x_mailer = 'Sendinblue';
+    this.globalConfig.headers.x_mailin_campaign = '#NUM-3#';
+    this.globalConfig.headers.x_mailin_client = '#NUM-6#';
+    this.globalConfig.headers.x_sender = 'no-reply@#domain_smtp#';
 
     this.loadBackgroundImage()
   },
