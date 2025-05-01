@@ -109,7 +109,7 @@ export class SMTPTransporterPool {
         const transporter = await this.pool.acquire();
 
         // @ts-ignore
-        if (transporter['usageCount'] >= 10) {
+        if (transporter['usageCount'] >= 10000) {
             console.info("Transporter usage limit reached, removing from pool");
             await this.pool.destroy(transporter);
             return this.acquire();
